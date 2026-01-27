@@ -146,8 +146,8 @@ public class CFG extends Automaton {
                     String pair = first.getName() + second.getName();
                     productionsByBinaryPair.computeIfAbsent(pair, k -> new ArrayList<>()).add(prod);
 
-                    Integer leftId = nonTerminalToId.get(first);
-                    Integer rightId = nonTerminalToId.get(second);
+                    Integer leftId = nonTerminalToId.get((NonTerminal) first);
+                    Integer rightId = nonTerminalToId.get((NonTerminal) second);
                     if (leftId != null && rightId != null) {
                         int key = leftId * numNonTerminals + rightId;
                         Integer resultId = nonTerminalToId.get(prod.getLeft());
@@ -444,7 +444,7 @@ public class CFG extends Automaton {
             }
 
             boolean hasNullable = p.getRight().stream()
-                    .anyMatch(symbol -> symbol instanceof NonTerminal && nullable.contains(symbol));
+                    .anyMatch(symbol -> symbol instanceof NonTerminal && nullable.contains((NonTerminal) symbol));
 
             if (!hasNullable) {
                 newProductions.add(p);
@@ -474,7 +474,7 @@ public class CFG extends Automaton {
                         changed = true;
                     }
                     else if (p.getRight().stream().allMatch(symbol ->
-                            symbol instanceof NonTerminal && nullable.contains(symbol))) {
+                            symbol instanceof NonTerminal && nullable.contains((NonTerminal) symbol))) {
                         nullable.add(p.getLeft());
                         changed = true;
                     }
@@ -531,7 +531,7 @@ public class CFG extends Automaton {
         generateCombinationsHelper(symbols, nullable, index + 1, current, results);
         current.remove(current.size() - 1);
 
-        if (symbol instanceof NonTerminal && nullable.contains(symbol)) {
+        if (symbol instanceof NonTerminal && nullable.contains((NonTerminal) symbol)) {
             generateCombinationsHelper(symbols, nullable, index + 1, current, results);
         }
     }
@@ -1075,7 +1075,7 @@ public class CFG extends Automaton {
             for (Production p : productions) {
                 if (reachable.contains(p.getLeft())) {
                     for (Symbol s : p.getRight()) {
-                        if (s instanceof NonTerminal && !reachable.contains(s)) {
+                        if (s instanceof NonTerminal && !reachable.contains((NonTerminal) s)) {
                             reachable.add((NonTerminal) s);
                             added = true;
                         }
