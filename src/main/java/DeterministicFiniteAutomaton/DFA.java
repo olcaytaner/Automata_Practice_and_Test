@@ -1,14 +1,28 @@
 package DeterministicFiniteAutomaton;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import common.Automaton;
+import common.ExecutionResult;
 import common.InputNormalizer;
+import common.MachineType;
+import common.ParseResult;
 import common.State;
 import common.Symbol;
+import common.ValidationMessage;
 
 /**
  * Represents a Deterministic Finite Automaton (DFA).

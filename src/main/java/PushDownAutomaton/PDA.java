@@ -1,11 +1,14 @@
 package PushDownAutomaton;
 
 import common.Automaton;
-import common.Automaton.ValidationMessage;
-import common.Automaton.ValidationMessage.ValidationMessageType;
+import common.ExecutionResult;
+import common.MachineType;
 import common.InputNormalizer;
+import common.ParseResult;
 import common.State;
 import common.Symbol;
+import common.ValidationMessage;
+import common.ValidationMessage.ValidationMessageType;
 
 import java.util.*;
 

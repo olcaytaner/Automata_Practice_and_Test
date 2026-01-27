@@ -9,7 +9,11 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.undo.UndoManager;
 import common.Automaton;
+import common.ExecutionResult;
+import common.MachineType;
+import common.ParseResult;
 import common.TestRunner;
+import common.ValidationMessage;
 import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
 import org.apache.batik.swing.JSVGCanvas;
 import org.apache.batik.util.XMLResourceDescriptor;
@@ -52,11 +56,11 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
      * Result class to pass data from background thread to UI thread
      */
     private static class GraphGenerationResult {
-        public final Automaton.ParseResult parseResult;
+        public final ParseResult parseResult;
         public final JSVGCanvas imageCanvas;
         public final String inputText;
-        
-        public GraphGenerationResult(Automaton.ParseResult parseResult, JSVGCanvas imageCanvas, String inputText) {
+
+        public GraphGenerationResult(ParseResult parseResult, JSVGCanvas imageCanvas, String inputText) {
             this.parseResult = parseResult;
             this.imageCanvas = imageCanvas;
             this.inputText = inputText;
@@ -69,7 +73,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
     public AbstractAutomatonPanel(MainPanel mainPanel, Automaton automaton) {
         this.mainPanel = mainPanel;
         this.automaton = automaton;
-        
+
         initializePanel();
         createTopPanel();
         if (ENABLE_INLINE_TESTING) {
@@ -202,7 +206,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
         String automatonText = textArea.getText();
         
         // Parse the automaton
-        Automaton.ParseResult parseResult = automaton.parse(automatonText);
+        ParseResult parseResult = automaton.parse(automatonText);
         
         if (!parseResult.isSuccess()) {
             inlineTestResult.setText("⚠ Parse Error");
@@ -214,7 +218,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
         // Execute the test
         try {
             Automaton parsedAutomaton = parseResult.getAutomaton();
-            Automaton.ExecutionResult execResult = parsedAutomaton.execute(input);
+            ExecutionResult execResult = parsedAutomaton.execute(input);
             
             boolean accepted = execResult.isAccepted();
             String displayInput = input.isEmpty() ? "ε" : "\"" + input + "\"";
@@ -490,8 +494,8 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
         final String inputText = textArea.getText();
 
         // Check if this is a machine type that doesn't need visualization
-        boolean skipVisualization = automaton.getType() == Automaton.MachineType.CFG ||
-                                    automaton.getType() == Automaton.MachineType.REGEX;
+        boolean skipVisualization = automaton.getMachineType() == MachineType.CFG ||
+                                    automaton.getMachineType() == MachineType.REGEX;
 
         final String[] errorText = {""};
 
@@ -504,7 +508,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
             @Override
             protected GraphGenerationResult doInBackground() throws Exception {
                 // This runs on background thread - First parse, then generate if successful
-                Automaton.ParseResult parseResult = automaton.parse(inputText);
+                ParseResult parseResult = automaton.parse(inputText);
                 JLabel imageLabel = automaton.toGraphviz(inputText);
 
                 boolean validSVG = imageLabel.getText().startsWith("<svg") && imageLabel.getText().contains("xmlns=\"http://www.w3.org/2000/svg\"");
@@ -726,7 +730,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
         String inputText = textArea.getText();
         automaton.setInputText(inputText);
         
-        Automaton.ParseResult parseResult = automaton.parse(inputText);
+        ParseResult parseResult = automaton.parse(inputText);
         if (!parseResult.isSuccess()) {
             JOptionPane.showMessageDialog(this, 
                 "Cannot run tests: Automaton has parsing errors. Check warnings panel.", 
@@ -776,7 +780,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
         String inputText = textArea.getText();
         automaton.setInputText(inputText);
         
-        Automaton.ParseResult parseResult = automaton.parse(inputText);
+        ParseResult parseResult = automaton.parse(inputText);
         if (!parseResult.isSuccess()) {
             JOptionPane.showMessageDialog(this, 
                 "Cannot run tests: Automaton has parsing errors. Check warnings panel.", 
@@ -961,7 +965,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
                     // CFG: Check max rules limit
                     if (finalMaxRules != null && testAutomaton instanceof ContextFreeGrammar.CFG) {
                         ContextFreeGrammar.CFG cfg = (ContextFreeGrammar.CFG) testAutomaton;
-                        common.Automaton.ValidationMessage rulesValidation = cfg.validateRulesCount(finalMaxRules);
+                        common.ValidationMessage rulesValidation = cfg.validateRulesCount(finalMaxRules);
                         if (rulesValidation != null) {
                             // Rules limit violation - show special result
                             int actualRules = cfg.getProductions().size();
@@ -988,7 +992,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
                     // PDA: Check max transitions limit
                     if (finalMaxTransitions != null && testAutomaton instanceof PushDownAutomaton.PDA) {
                         PushDownAutomaton.PDA pda = (PushDownAutomaton.PDA) testAutomaton;
-                        common.Automaton.ValidationMessage transitionsValidation = pda.validateTransitionsCount(finalMaxTransitions);
+                        common.ValidationMessage transitionsValidation = pda.validateTransitionsCount(finalMaxTransitions);
                         if (transitionsValidation != null) {
                             // Transitions limit violation - show special result
                             int actualTransitions = pda.getTransitionCount();
@@ -1214,13 +1218,13 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
         String inputText = textArea.getText();
         automaton.setInputText(inputText);
         
-        List<Automaton.ValidationMessage> messages = automaton.validate();
+        List<ValidationMessage> messages = automaton.validate();
         String warningText;
         if (messages.isEmpty()) {
             warningText = "No warnings or errors found!";
         } else {
             StringBuilder result = new StringBuilder();
-            for (Automaton.ValidationMessage msg : messages) {
+            for (ValidationMessage msg : messages) {
                 result.append(msg.toString()).append("\n");
             }
             warningText = result.toString();
@@ -1235,14 +1239,14 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
      */
     protected void updateWarningDisplayForParsedAutomaton(String inputText) {
         // Parse the input text to get a fresh automaton instance
-        Automaton.ParseResult parseResult = automaton.parse(inputText);
+        ParseResult parseResult = automaton.parse(inputText);
         
         StringBuilder result = new StringBuilder();
         
         // Always show parsing messages first (includes syntax errors)
-        List<Automaton.ValidationMessage> parseMessages = parseResult.getValidationMessages();
+        List<ValidationMessage> parseMessages = parseResult.getValidationMessages();
         if (parseMessages != null && !parseMessages.isEmpty()) {
-            for (Automaton.ValidationMessage msg : parseMessages) {
+            for (ValidationMessage msg : parseMessages) {
                 result.append(msg.toString()).append("\n");
             }
         }
@@ -1252,9 +1256,9 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
             Automaton parsedAutomaton = parseResult.getAutomaton();
             parsedAutomaton.setInputText(inputText);
             
-            List<Automaton.ValidationMessage> validationMessages = parsedAutomaton.validate();
+            List<ValidationMessage> validationMessages = parsedAutomaton.validate();
             if (validationMessages != null && !validationMessages.isEmpty()) {
-                for (Automaton.ValidationMessage msg : validationMessages) {
+                for (ValidationMessage msg : validationMessages) {
                     result.append(msg.toString()).append("\n");
                 }
             }
@@ -1274,13 +1278,13 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
     /**
      * Update warning display using an existing parse result
      */
-    protected void updateWarningDisplayWithParseResult(Automaton.ParseResult parseResult, String inputText) {
+    protected void updateWarningDisplayWithParseResult(ParseResult parseResult, String inputText) {
         StringBuilder result = new StringBuilder();
         
         // Always show parsing messages first (includes syntax errors)
-        List<Automaton.ValidationMessage> parseMessages = parseResult.getValidationMessages();
+        List<ValidationMessage> parseMessages = parseResult.getValidationMessages();
         if (parseMessages != null && !parseMessages.isEmpty()) {
-            for (Automaton.ValidationMessage msg : parseMessages) {
+            for (ValidationMessage msg : parseMessages) {
                 result.append(msg.toString()).append("\n");
             }
         }
@@ -1290,9 +1294,9 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
             Automaton parsedAutomaton = parseResult.getAutomaton();
             parsedAutomaton.setInputText(inputText);
             
-            List<Automaton.ValidationMessage> validationMessages = parsedAutomaton.validate();
+            List<ValidationMessage> validationMessages = parsedAutomaton.validate();
             if (validationMessages != null && !validationMessages.isEmpty()) {
-                for (Automaton.ValidationMessage msg : validationMessages) {
+                for (ValidationMessage msg : validationMessages) {
                     result.append(msg.toString()).append("\n");
                 }
             }

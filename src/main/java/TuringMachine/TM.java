@@ -8,8 +8,12 @@ import java.util.Map;
 import java.util.Set;
 
 import common.Automaton;
-import common.Automaton.ValidationMessage.ValidationMessageType;
+import common.ExecutionResult;
+import common.MachineType;
+import common.ParseResult;
 import common.Symbol;
+import common.ValidationMessage;
+import common.ValidationMessage.ValidationMessageType;
 
 /**
  * Represents a Turing Machine.

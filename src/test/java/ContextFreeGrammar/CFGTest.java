@@ -3,7 +3,10 @@ package ContextFreeGrammar;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import common.Automaton;
+
+import common.ExecutionResult;
+import common.ParseResult;
+import common.ValidationMessage;
 
 /**
  * Main class for the Context-Free Grammar parser application.
@@ -32,7 +35,7 @@ public class CFGTest {
             
             // Create CFG and parse using integrated method
             CFG grammar = new CFG();
-            Automaton.ParseResult parseResult = grammar.parse(content);
+            ParseResult parseResult = grammar.parse(content);
             
             if (parseResult.isSuccess()) {
                 System.out.println("Parsing successful!");
@@ -51,12 +54,12 @@ public class CFGTest {
                 
                 // Test execution with a simple string
                 System.out.println("\nTesting execution with '01':");
-                Automaton.ExecutionResult execResult = grammar.execute("01");
+                ExecutionResult execResult = grammar.execute("01");
                 System.out.println("Result: " + (execResult.isAccepted() ? "ACCEPTED" : "REJECTED"));
                 System.out.println("Trace:\n" + execResult.getTrace());
             } else {
                 System.err.println("Parsing failed:");
-                for (Automaton.ValidationMessage msg : parseResult.getValidationMessages()) {
+                for (ValidationMessage msg : parseResult.getValidationMessages()) {
                     System.err.println(msg);
                 }
             }

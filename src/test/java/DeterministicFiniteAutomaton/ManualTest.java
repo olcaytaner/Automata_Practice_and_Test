@@ -1,11 +1,19 @@
 package DeterministicFiniteAutomaton;
 
-import common.Automaton;
-import common.Automaton.*;
-import common.Automaton.ValidationMessage.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import common.ExecutionResult;
+import common.ParseResult;
 import common.Symbol;
-import java.io.*;
-import java.util.*;
+import common.ValidationMessage;
+import common.ValidationMessage.ValidationMessageType;
 
 public class ManualTest {
 
@@ -67,11 +75,11 @@ public class ManualTest {
             if (verbose){
                 System.out.println(warning);
             }
-            if (warning.getType() == ValidationMessage.ValidationMessageType.ERROR){
+            if (warning.getType() == ValidationMessageType.ERROR){
                 errorCount++;
-            }else if (warning.getType() == ValidationMessage.ValidationMessageType.WARNING){
+            }else if (warning.getType() == ValidationMessageType.WARNING){
                 warningCount++;
-            }else if (warning.getType() == ValidationMessage.ValidationMessageType.INFO){
+            }else if (warning.getType() == ValidationMessageType.INFO){
                 infoCount++;
             }
         }
@@ -93,7 +101,7 @@ public class ManualTest {
                 System.out.println(dfa.toDotCode(null));
             }
 
-            List<Automaton.ValidationMessage> warnings = dfa.validate();
+            List<ValidationMessage> warnings = dfa.validate();
             for (ValidationMessage warning : warnings){
                 if (verbose){
                     System.out.println(warning);
@@ -205,7 +213,7 @@ public class ManualTest {
                 lineCount++;
                 String acc = line.substring(line.indexOf(",")+1);
                 line = line.substring(0, line.indexOf(","));
-                Automaton.ExecutionResult result = dfa.execute(line);
+                ExecutionResult result = dfa.execute(line);
                 if (result.isAccepted()){
                     if (acc.equals("1")){
                         accepted++;

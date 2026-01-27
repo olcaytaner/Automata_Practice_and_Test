@@ -27,7 +27,7 @@ import ContextFreeGrammar.CFG;
 import DeterministicFiniteAutomaton.DFA;
 import NondeterministicFiniteAutomaton.NFA;
 import PushDownAutomaton.PDA;
-import RegularExpression.SyntaxTree.SyntaxTree;
+import RegularExpression.RegularExpression;
 import TuringMachine.TM;
 import common.Automaton;
 
@@ -55,17 +55,17 @@ public class MainPanel extends JPanel {
         TestSettings.setPreferencesManager(preferencesManager);
     }
 
-    public class FileManager {        
+    public class FileManager {
         public String getExtensionForAutomaton(Automaton automaton) {
             if (automaton instanceof NFA) return ".nfa";
-            if (automaton instanceof DFA) return ".dfa"; 
+            if (automaton instanceof DFA) return ".dfa";
             if (automaton instanceof PDA) return ".pda";
             if (automaton instanceof TM) return ".tm";
             if (automaton instanceof CFG) return ".cfg";
-            if (automaton instanceof SyntaxTree) return ".rex";
+            if (automaton instanceof RegularExpression) return ".rex";
             return ".txt";
         }
-     
+
         public Color getColorForExtension(String extension) {
             switch(extension.toLowerCase()) {
                 case ".nfa":
@@ -88,7 +88,7 @@ public class MainPanel extends JPanel {
             String extension = getFileExtension(file);
             Automaton automaton = null;
             JPanel panel = null;
-            
+
             switch(extension) {
                 case ".nfa":
                     automaton = new NFA();
@@ -121,15 +121,14 @@ public class MainPanel extends JPanel {
                     ((CFGPanel)panel).loadFile(file);
                     break;
                 case ".rex":
-                    automaton = new SyntaxTree();
-                    automaton.setInputText(content);
+                    automaton = new RegularExpression();
                     panel = new REXPanel(MainPanel.this, automaton);
                     ((REXPanel)panel).loadFile(file);
                     break;
                 default:
                     throw new IllegalArgumentException("Unsupported file type: " + extension);
             }
-            
+
             return panel;
         }
         
@@ -757,7 +756,7 @@ public class MainPanel extends JPanel {
     public void createNewAutomaton(String type) {
         Automaton automaton = null;
         JPanel panel = null;
-        
+
         switch(type) {
             case "NFA":
                 automaton = new NFA();
@@ -780,19 +779,19 @@ public class MainPanel extends JPanel {
                 panel = new CFGPanel(this, automaton);
                 break;
             case "REX":
-                automaton = new SyntaxTree();
+                automaton = new RegularExpression();
                 panel = new REXPanel(this, automaton);
                 break;
             default:
                 JOptionPane.showMessageDialog(this, "Unknown automaton type: " + type, "Error", JOptionPane.ERROR_MESSAGE);
                 return;
         }
-        
+
         // Apply template to new automaton panels
         if (automaton != null && panel instanceof AbstractAutomatonPanel) {
             ((AbstractAutomatonPanel) panel).setInitialContent(automaton.getDefaultTemplate());
         }
-        
+
         if (panel != null && panel instanceof AutomatonPanel) {
             String tabTitle = "New " + type;
             AutomatonTab newTab = new AutomatonTab(tabTitle, (AutomatonPanel) panel, null);

@@ -1,10 +1,9 @@
 package RegularExpression;
 
-import RegularExpression.Checker.Check;
-import RegularExpression.SyntaxTree.RegularExpression;
-
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+
+import RegularExpression.Checker.Check;
 
 public class RegexBench {
     public static void main(String[] args) throws FileNotFoundException {

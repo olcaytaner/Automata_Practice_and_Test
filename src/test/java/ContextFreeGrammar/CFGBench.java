@@ -1,13 +1,13 @@
 package ContextFreeGrammar;
 
-import common.Automaton;
-import common.TestCase;
-import common.TestFileParser;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+
+import common.ParseResult;
+import common.TestCase;
+import common.TestFileParser;
 
 public class CFGBench {
     private static final double THRESHOLD_SECONDS = 1.0;
@@ -29,7 +29,7 @@ public class CFGBench {
     private static void runScenario(String name, String cfgPath, String testPath) throws Exception {
         String cfgText = new String(Files.readAllBytes(Paths.get(cfgPath)), StandardCharsets.UTF_8);
         CFG cfg = new CFG();
-        Automaton.ParseResult pr = cfg.parse(cfgText);
+        ParseResult pr = cfg.parse(cfgText);
         if (!pr.isSuccess()) throw new IllegalStateException("CFG parse failed: " + name);
 
         List<TestCase> tests = TestFileParser.parseTestFile(testPath).getTestCases();

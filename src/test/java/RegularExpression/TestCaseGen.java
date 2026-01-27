@@ -1,9 +1,12 @@
 package RegularExpression;
 
-import RegularExpression.Checker.Check;
-import RegularExpression.SyntaxTree.RegularExpression;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
-import java.io.*;
+import RegularExpression.Checker.Check;
 
 public class TestCaseGen {
     public static void main(String[] args) throws FileNotFoundException {

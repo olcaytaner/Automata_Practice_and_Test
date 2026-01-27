@@ -23,7 +23,7 @@ import ContextFreeGrammar.CFG;
 import DeterministicFiniteAutomaton.DFA;
 import NondeterministicFiniteAutomaton.NFA;
 import PushDownAutomaton.PDA;
-import RegularExpression.SyntaxTree.SyntaxTree;
+import RegularExpression.RegularExpression;
 import TuringMachine.TM;
 
 /**
@@ -115,7 +115,7 @@ public class UIPanelIntegrationTest {
         @DisplayName("Should create REX panel correctly")
         void testCreateREXPanel() {
             assertDoesNotThrow(() -> {
-                SyntaxTree rex = new SyntaxTree();
+                RegularExpression rex = new RegularExpression();
                 REXPanel panel = new REXPanel(mainPanel, rex);
                 
                 assertNotNull(panel, "REX panel should be created");

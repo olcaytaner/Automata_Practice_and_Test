@@ -1,12 +1,12 @@
 package RegularExpression.Checker;
 
-import RegularExpression.SyntaxTree.RegularExpression;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import RegularExpression.RegularExpression;
 
 /**
  * Check utility:

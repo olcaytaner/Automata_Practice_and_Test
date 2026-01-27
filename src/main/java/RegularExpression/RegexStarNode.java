@@ -1,24 +1,29 @@
-package RegularExpression.SyntaxTree;
+package RegularExpression;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Represents the Kleene star (<code>{@value RegularExpression.SyntaxTree.RegexOperator#STAR}</code>)
- * operator in a regular expression syntax tree.
+ * Represents the Kleene star ({@value RegexOperator#STAR}) operator
+ * in a regular expression syntax tree.
  * <p>
  * The Kleene star applies to a single child node, matching zero or more
  * repetitions of that pattern. For example, in the regex
- * <code>(10){@value RegularExpression.SyntaxTree.RegexOperator#STAR}</code>,
- * the sequence <code>10</code> is the child of the
- * <code>{@value RegularExpression.SyntaxTree.RegexOperator#STAR}</code> operator.
+ * <code>(10){@value RegexOperator#STAR}</code>, the sequence <code>10</code>
+ * is the child of the star operator.
  * </p>
+ * Renamed from StarNode for clarity.
+ *
+ * @version 2.0
  */
-public class StarNode extends UnaryNode {
+public class RegexStarNode extends RegexUnaryNode {
 
     private static final int DEFAULT_MAX_REPEAT = 4;
 
-    public StarNode(SyntaxTreeNode child) {
+    public RegexStarNode(RegexNode child) {
         super(child);
     }
 

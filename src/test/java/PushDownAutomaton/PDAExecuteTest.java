@@ -14,7 +14,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import common.Automaton;
+import common.ExecutionResult;
+import common.ValidationMessage;
 
 /**
  * Comprehensive JUnit 5 test class for PDA execution functionality.
@@ -91,7 +92,7 @@ public class PDAExecuteTest {
         @DisplayName("Execute should return ExecutionResult object")
         void testExecuteReturnsResult() {
             pda.parse(anbnPDA);
-            Automaton.ExecutionResult result = pda.execute("aabb");
+            ExecutionResult result = pda.execute("aabb");
             
             assertNotNull(result, "ExecutionResult should not be null");
             assertNotNull(result.getTrace(), "Trace should not be null");
@@ -131,7 +132,7 @@ public class PDAExecuteTest {
         @DisplayName("Trace should contain stack operations")
         void testTraceContainsStackOperations() {
             pda.parse(anbnPDA);
-            Automaton.ExecutionResult result = pda.execute("aabb");
+            ExecutionResult result = pda.execute("aabb");
             String trace = result.getTrace();
             
             assertNotNull(trace, "Trace should not be null");
@@ -145,7 +146,7 @@ public class PDAExecuteTest {
         @DisplayName("Stack should be empty for accepted strings")
         void testStackEmptyOnAcceptance() {
             pda.parse(anbnPDA);
-            Automaton.ExecutionResult result = pda.execute("aaabbb");
+            ExecutionResult result = pda.execute("aaabbb");
             
             assertTrue(result.isAccepted(), "'aaabbb' should be accepted");
             // Acceptance by empty stack or final state with empty stack
@@ -176,7 +177,7 @@ public class PDAExecuteTest {
         @DisplayName("Accepted result should have isAccepted() true")
         void testAcceptedResult() {
             pda.parse(anbnPDA);
-            Automaton.ExecutionResult result = pda.execute("aabb");
+            ExecutionResult result = pda.execute("aabb");
             
             assertTrue(result.isAccepted(), "Result should be accepted");
             assertNotNull(result.getTrace(), "Accepted result should have trace");
@@ -186,7 +187,7 @@ public class PDAExecuteTest {
         @DisplayName("Rejected result should have isAccepted() false")
         void testRejectedResult() {
             pda.parse(anbnPDA);
-            Automaton.ExecutionResult result = pda.execute("aab");
+            ExecutionResult result = pda.execute("aab");
             
             assertFalse(result.isAccepted(), "Result should be rejected");
             assertNotNull(result.getTrace(), "Rejected result should have trace");
@@ -196,8 +197,8 @@ public class PDAExecuteTest {
         @DisplayName("Runtime messages should be populated")
         void testRuntimeMessages() {
             pda.parse(anbnPDA);
-            Automaton.ExecutionResult result = pda.execute("ab");
-            List<Automaton.ValidationMessage> messages = result.getRuntimeMessages();
+            ExecutionResult result = pda.execute("ab");
+            List<ValidationMessage> messages = result.getRuntimeMessages();
             
             assertNotNull(messages, "Runtime messages should not be null");
             // Messages may contain information about stack operations
@@ -214,7 +215,7 @@ public class PDAExecuteTest {
             pda.parse(anbnPDA);
             
             // Empty string test - PDA with epsilon transitions might accept it
-            Automaton.ExecutionResult emptyResult = pda.execute("");
+            ExecutionResult emptyResult = pda.execute("");
             assertNotNull(emptyResult, "Should handle empty string");
             
             // The PDA accepts by final state with empty stack
@@ -236,7 +237,7 @@ public class PDAExecuteTest {
                                     "q2 eps Z -> q3 Z\n";
             
             pda.parse(pdaWithEpsilons);
-            Automaton.ExecutionResult result = pda.execute("");
+            ExecutionResult result = pda.execute("");
             
             assertNotNull(result, "Should handle multiple epsilon transitions");
             // Result depends on PDA implementation
@@ -251,7 +252,7 @@ public class PDAExecuteTest {
         @DisplayName("Empty string execution")
         void testEmptyString() {
             pda.parse(anbnPDA);
-            Automaton.ExecutionResult result = pda.execute("");
+            ExecutionResult result = pda.execute("");
             
             assertNotNull(result, "Result should not be null for empty string");
             // Empty string acceptance depends on PDA definition
@@ -270,7 +271,7 @@ public class PDAExecuteTest {
                 longString.append('b');
             }
             
-            Automaton.ExecutionResult result = pda.execute(longString.toString());
+            ExecutionResult result = pda.execute(longString.toString());
             
             assertNotNull(result, "Result should not be null for long string");
             assertTrue(result.isAccepted(), "100 a's followed by 100 b's should be accepted");
@@ -280,7 +281,7 @@ public class PDAExecuteTest {
         @DisplayName("String with invalid symbols")
         void testInvalidSymbols() {
             pda.parse(anbnPDA);
-            Automaton.ExecutionResult result = pda.execute("aacbb");
+            ExecutionResult result = pda.execute("aacbb");
             
             assertNotNull(result, "Result should not be null");
             assertFalse(result.isAccepted(), "String with invalid symbol 'c' should be rejected");
@@ -297,7 +298,7 @@ public class PDAExecuteTest {
                 manyAs.append('a');
             }
             
-            Automaton.ExecutionResult result = pda.execute(manyAs.toString());
+            ExecutionResult result = pda.execute(manyAs.toString());
             
             assertNotNull(result, "Should handle deep stack without overflow");
             assertFalse(result.isAccepted(), "String with only a's should be rejected");
@@ -362,7 +363,7 @@ public class PDAExecuteTest {
         @ValueSource(strings = {"ab", "aabb", "aaabbb", "aaaabbbb", "aaaaabbbbb"})
         @DisplayName("Should accept all valid a^n b^n strings")
         void testAcceptedStrings(String input) {
-            Automaton.ExecutionResult result = pda.execute(input);
+            ExecutionResult result = pda.execute(input);
             assertTrue(result.isAccepted(), 
                 String.format("String '%s' should be accepted", input));
         }
@@ -371,7 +372,7 @@ public class PDAExecuteTest {
         @ValueSource(strings = {"a", "b", "ba", "aab", "abb", "aaabb", "aabbb"})
         @DisplayName("Should reject all invalid strings")
         void testRejectedStrings(String input) {
-            Automaton.ExecutionResult result = pda.execute(input);
+            ExecutionResult result = pda.execute(input);
             assertFalse(result.isAccepted(), 
                 String.format("String '%s' should be rejected", input));
         }
@@ -389,7 +390,7 @@ public class PDAExecuteTest {
         })
         @DisplayName("Test various inputs with expected results")
         void testVariousInputs(String input, boolean expectedAccepted) {
-            Automaton.ExecutionResult result = pda.execute(input);
+            ExecutionResult result = pda.execute(input);
             assertEquals(expectedAccepted, result.isAccepted(),
                 String.format("String '%s' should be %s", 
                     input, expectedAccepted ? "accepted" : "rejected"));
@@ -404,7 +405,7 @@ public class PDAExecuteTest {
         @DisplayName("Trace should show complete execution path with stack")
         void testCompleteTracePath() {
             pda.parse(anbnPDA);
-            Automaton.ExecutionResult result = pda.execute("aabb");
+            ExecutionResult result = pda.execute("aabb");
             String trace = result.getTrace();
             
             assertNotNull(trace, "Trace should not be null");
@@ -418,7 +419,7 @@ public class PDAExecuteTest {
         @DisplayName("Trace for rejected string should show path until rejection")
         void testRejectedTrace() {
             pda.parse(anbnPDA);
-            Automaton.ExecutionResult result = pda.execute("aab");
+            ExecutionResult result = pda.execute("aab");
             String trace = result.getTrace();
             
             assertNotNull(trace, "Trace should not be null for rejected string");
@@ -444,7 +445,7 @@ public class PDAExecuteTest {
             }
             
             long startTime = System.currentTimeMillis();
-            Automaton.ExecutionResult result = pda.execute(nested.toString());
+            ExecutionResult result = pda.execute(nested.toString());
             long endTime = System.currentTimeMillis();
             
             assertTrue(result.isAccepted(), "100 nested parentheses should be accepted");
@@ -465,7 +466,7 @@ public class PDAExecuteTest {
             }
             
             long startTime = System.currentTimeMillis();
-            Automaton.ExecutionResult result = pda.execute(longString.toString());
+            ExecutionResult result = pda.execute(longString.toString());
             long endTime = System.currentTimeMillis();
             
             assertTrue(result.isAccepted(), "500 a's followed by 500 b's should be accepted");

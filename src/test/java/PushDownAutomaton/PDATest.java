@@ -1,18 +1,29 @@
 package PushDownAutomaton;
 
-import common.Automaton;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import common.ExecutionResult;
+import common.MachineType;
+import common.ParseResult;
+import common.ValidationMessage;
 
 /**
  * JUnit 5 test class for Push-Down Automaton functionality.
@@ -59,7 +70,7 @@ public class PDATest {
         @Test
         @DisplayName("PDA should have correct machine type")
         void testMachineType() {
-            assertEquals(Automaton.MachineType.PDA, pda.getType(), 
+            assertEquals(MachineType.PDA, pda.getMachineType(),
                 "PDA should have PDA machine type");
         }
         
@@ -78,7 +89,7 @@ public class PDATest {
         @Test
         @DisplayName("Valid PDA definition should parse successfully")
         void testParseValidPDA() {
-            Automaton.ParseResult result = pda.parse(validPDAContent);
+            ParseResult result = pda.parse(validPDAContent);
             
             // PDA parsing may have implementation-specific behavior
             assertNotNull(result, "Parse result should not be null");
@@ -94,7 +105,7 @@ public class PDATest {
         @Test
         @DisplayName("Invalid PDA definition should fail parsing")
         void testParseInvalidPDA() {
-            Automaton.ParseResult result = pda.parse(invalidPDAContent);
+            ParseResult result = pda.parse(invalidPDAContent);
             
             assertNotNull(result, "Parse result should not be null");
             // Invalid PDA should typically fail, but implementation may vary
@@ -107,7 +118,7 @@ public class PDATest {
         @Test
         @DisplayName("Empty input should fail parsing")
         void testParseEmptyInput() {
-            Automaton.ParseResult result = pda.parse("");
+            ParseResult result = pda.parse("");
             
             assertNotNull(result, "Parse result should not be null");
             assertFalse(result.isSuccess(), "Empty input should fail parsing");
@@ -133,19 +144,19 @@ public class PDATest {
         @DisplayName("Execute with parsed PDA")
         void testExecuteWithParsedPDA() {
             // First parse a valid PDA
-            Automaton.ParseResult parseResult = pda.parse(validPDAContent);
+            ParseResult parseResult = pda.parse(validPDAContent);
             
             if (parseResult.isSuccess()) {
                 PDA parsedPDA = (PDA) parseResult.getAutomaton();
                 
                 // Test execution (result depends on PDA implementation)
-                Automaton.ExecutionResult result = parsedPDA.execute("aabb");
+                ExecutionResult result = parsedPDA.execute("aabb");
                 
                 assertNotNull(result, "Execution result should not be null");
                 assertNotNull(result.getTrace(), "Execution should have trace information");
             } else {
                 // If parsing failed, test that execution handles unparsed state gracefully
-                Automaton.ExecutionResult result = pda.execute("test");
+                ExecutionResult result = pda.execute("test");
                 assertNotNull(result, "Execution result should not be null even when not parsed");
             }
         }
@@ -157,7 +168,7 @@ public class PDATest {
             // Parse PDA first
             pda.parse(validPDAContent);
             
-            Automaton.ExecutionResult result = pda.execute(input);
+            ExecutionResult result = pda.execute(input);
             
             assertNotNull(result, "Execution result should not be null for input: " + input);
             assertNotNull(result.getTrace(), "Execution should have trace information");
@@ -168,7 +179,7 @@ public class PDATest {
         @DisplayName("Execute without parsing should handle gracefully")
         void testExecuteWithoutParsing() {
             PDA unparsedPDA = new PDA();
-            Automaton.ExecutionResult result = unparsedPDA.execute("test");
+            ExecutionResult result = unparsedPDA.execute("test");
             
             assertNotNull(result, "Execution result should not be null");
             // Execution should either fail gracefully or return meaningful error
@@ -187,7 +198,7 @@ public class PDATest {
         void testValidateValidPDA() {
             pda.setInputText(validPDAContent);
             
-            List<Automaton.ValidationMessage> messages = pda.validate();
+            List<ValidationMessage> messages = pda.validate();
             
             assertNotNull(messages, "Validation messages should not be null");
             
@@ -200,7 +211,7 @@ public class PDATest {
         void testValidateInvalidPDA() {
             pda.setInputText(invalidPDAContent);
             
-            List<Automaton.ValidationMessage> messages = pda.validate();
+            List<ValidationMessage> messages = pda.validate();
             
             assertNotNull(messages, "Validation messages should not be null");
             // Invalid PDA should typically generate messages
@@ -209,7 +220,7 @@ public class PDATest {
         @Test
         @DisplayName("Validate with empty input should handle gracefully")
         void testValidateEmptyInput() {
-            List<Automaton.ValidationMessage> messages = pda.validate();
+            List<ValidationMessage> messages = pda.validate();
             
             assertNotNull(messages, "Validation messages should not be null");
             // PDA validation may return empty list for empty input - both behaviors are valid
@@ -268,7 +279,7 @@ public class PDATest {
             
             try {
                 String content = new String(Files.readAllBytes(Paths.get(filePath)));
-                Automaton.ParseResult result = pda.parse(content);
+                ParseResult result = pda.parse(content);
                 
                 assertNotNull(result, "Parse result should not be null");
                 
@@ -320,13 +331,13 @@ public class PDATest {
         @DisplayName("PDA should handle stack operations during execution")
         void testStackOperations() {
             // Parse a valid PDA
-            Automaton.ParseResult parseResult = pda.parse(validPDAContent);
+            ParseResult parseResult = pda.parse(validPDAContent);
             
             if (parseResult.isSuccess()) {
                 PDA parsedPDA = (PDA) parseResult.getAutomaton();
                 
                 // Execute string that should require stack operations
-                Automaton.ExecutionResult result = parsedPDA.execute("aabb");
+                ExecutionResult result = parsedPDA.execute("aabb");
                 
                 assertNotNull(result, "Execution result should not be null");
                 assertNotNull(result.getTrace(), "Should have execution trace");

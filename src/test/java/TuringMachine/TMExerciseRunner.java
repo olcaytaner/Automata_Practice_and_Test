@@ -1,14 +1,14 @@
 package TuringMachine;
 
-import common.Automaton;
-import common.TestRunner;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+
+import common.ParseResult;
+import common.TestRunner;
 
 public class TMExerciseRunner {
 
@@ -44,7 +44,7 @@ public class TMExerciseRunner {
             try {
                 String tmContent = new String(Files.readAllBytes(tmPath));
                 TM tm = new TM(null, null, null, null, null, null, null);
-                Automaton.ParseResult parseResult = tm.parse(tmContent);
+                ParseResult parseResult = tm.parse(tmContent);
 
                 if (!parseResult.isSuccess()) {
                     System.out.println("Failed to parse TM: " + exerciseBaseName);

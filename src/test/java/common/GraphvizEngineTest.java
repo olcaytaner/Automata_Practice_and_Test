@@ -66,11 +66,11 @@ class GraphvizEngineTest {
         DFA dfa = new DFA();
 
         // Test parsing
-        Automaton.ParseResult parseResult = dfa.parse(dfaInput);
+        ParseResult parseResult = dfa.parse(dfaInput);
         assertTrue(parseResult.isSuccess(),
                 "DFA parsing should succeed");
         assertEquals(0, parseResult.getValidationMessages().stream()
-                        .filter(m -> m.getType() == Automaton.ValidationMessage.ValidationMessageType.ERROR)
+                        .filter(m -> m.getType() == ValidationMessage.ValidationMessageType.ERROR)
                         .count(),
                 "Should have no parse errors");
 
@@ -86,7 +86,7 @@ class GraphvizEngineTest {
                 "Text should contain SVG markup");
         assertTrue(svgText.contains("</svg>"), "SVG should be properly closed");
 
-        System.out.println("✅ DFA rendering successful - SVG text length: " +
+        System.out.println("DFA rendering successful - SVG text length: " +
                 svgText.length() + " characters");
     }
 
@@ -107,7 +107,7 @@ class GraphvizEngineTest {
         NFA nfa = new NFA();
 
         // Test parsing
-        Automaton.ParseResult parseResult = nfa.parse(nfaInput);
+        ParseResult parseResult = nfa.parse(nfaInput);
         assertTrue(parseResult.isSuccess(),
                 "NFA parsing should succeed");
 
@@ -123,7 +123,7 @@ class GraphvizEngineTest {
                 "Text should contain SVG markup");
         assertTrue(svgText.contains("</svg>"), "SVG should be properly closed");
 
-        System.out.println("✅ NFA rendering successful - SVG text length: " +
+        System.out.println("NFA rendering successful - SVG text length: " +
                 svgText.length() + " characters");
     }
 
@@ -133,7 +133,7 @@ class GraphvizEngineTest {
         String invalidInput = "this is not valid";
 
         DFA dfa = new DFA();
-        Automaton.ParseResult parseResult = dfa.parse(invalidInput);
+        ParseResult parseResult = dfa.parse(invalidInput);
 
         // Parsing should fail
         assertFalse(parseResult.isSuccess(),
@@ -143,6 +143,6 @@ class GraphvizEngineTest {
         JLabel result = dfa.toGraphviz(invalidInput);
         assertNotNull(result, "Should return error label");
 
-        System.out.println("✅ Error case handled correctly");
+        System.out.println("Error case handled correctly");
     }
 }

@@ -1,10 +1,9 @@
 package RegularExpression;
 
-import RegularExpression.Checker.Check;
-import RegularExpression.SyntaxTree.RegularExpression;
-
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+
+import RegularExpression.Checker.Check;
 
 /**
  * This is how you generate correct and incorrect cases to check in RegularExpression, in large sizes.

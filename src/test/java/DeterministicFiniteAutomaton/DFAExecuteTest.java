@@ -1,18 +1,29 @@
 package DeterministicFiniteAutomaton;
 
-import common.Automaton;
-import common.State;
-import common.Symbol;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.*;
+import common.ExecutionResult;
+import common.ParseResult;
+import common.State;
+import common.Symbol;
+import common.ValidationMessage;
+import common.ValidationMessage.ValidationMessageType;
 
 /**
  * Comprehensive JUnit 5 test class for DFA execution functionality.
@@ -71,7 +82,7 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("Execute should return ExecutionResult object")
         void testExecuteReturnsResult() {
-            Automaton.ExecutionResult result = dfa.execute("a");
+            ExecutionResult result = dfa.execute("a");
             
             assertNotNull(result, "ExecutionResult should not be null");
             assertNotNull(result.getTrace(), "Trace should not be null");
@@ -101,7 +112,7 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("Trace should contain state transitions")
         void testTraceContainsTransitions() {
-            Automaton.ExecutionResult result = dfa.execute("aba");
+            ExecutionResult result = dfa.execute("aba");
             String trace = result.getTrace();
             
             assertNotNull(trace, "Trace should not be null");
@@ -125,7 +136,7 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("Accepted result should have isAccepted() true")
         void testAcceptedResult() {
-            Automaton.ExecutionResult result = dfa.execute("a");
+            ExecutionResult result = dfa.execute("a");
             
             assertTrue(result.isAccepted(), "Result should be accepted");
             assertNotNull(result.getTrace(), "Accepted result should have trace");
@@ -134,7 +145,7 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("Rejected result should have isAccepted() false")
         void testRejectedResult() {
-            Automaton.ExecutionResult result = dfa.execute("b");
+            ExecutionResult result = dfa.execute("b");
             
             assertFalse(result.isAccepted(), "Result should be rejected");
             assertNotNull(result.getTrace(), "Rejected result should have trace");
@@ -143,8 +154,8 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("Runtime messages should be populated appropriately")
         void testRuntimeMessages() {
-            Automaton.ExecutionResult result = dfa.execute("ab");
-            List<Automaton.ValidationMessage> messages = result.getRuntimeMessages();
+            ExecutionResult result = dfa.execute("ab");
+            List<ValidationMessage> messages = result.getRuntimeMessages();
             
             assertNotNull(messages, "Runtime messages should not be null");
             // Messages may be empty for valid execution or contain info/warnings
@@ -163,7 +174,7 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("Empty string execution")
         void testEmptyString() {
-            Automaton.ExecutionResult result = dfa.execute("");
+            ExecutionResult result = dfa.execute("");
             
             assertNotNull(result, "Result should not be null for empty string");
             assertFalse(result.isAccepted(), "Empty string should be rejected (start state not final)");
@@ -181,17 +192,17 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("String with invalid symbols")
         void testInvalidSymbols() {
-            Automaton.ExecutionResult result = dfa.execute("abc");
+            ExecutionResult result = dfa.execute("abc");
             
             assertNotNull(result, "Result should not be null");
             assertFalse(result.isAccepted(), "String with invalid symbol 'c' should be rejected");
             
             // Check for runtime messages about invalid symbol
-            List<Automaton.ValidationMessage> messages = result.getRuntimeMessages();
+            List<ValidationMessage> messages = result.getRuntimeMessages();
             if (messages != null && !messages.isEmpty()) {
                 // Invalid symbol might generate an error message
                 messages.stream()
-                    .anyMatch(m -> m.getType() == Automaton.ValidationMessage.ValidationMessageType.ERROR);
+                    .anyMatch(m -> m.getType() == ValidationMessageType.ERROR);
             }
         }
         
@@ -204,7 +215,7 @@ public class DFAExecuteTest {
             }
             longString.append("a"); // End with 'a' to be accepted
             
-            Automaton.ExecutionResult result = dfa.execute(longString.toString());
+            ExecutionResult result = dfa.execute(longString.toString());
             
             assertNotNull(result, "Result should not be null for long string");
             assertTrue(result.isAccepted(), "Long string ending with 'a' should be accepted");
@@ -316,7 +327,7 @@ public class DFAExecuteTest {
         @ValueSource(strings = {"a", "aa", "ba", "aba", "bba", "aaa", "bbbbba"})
         @DisplayName("Should accept all strings ending with 'a'")
         void testAcceptedStrings(String input) {
-            Automaton.ExecutionResult result = dfa.execute(input);
+            ExecutionResult result = dfa.execute(input);
             assertTrue(result.isAccepted(), 
                 String.format("String '%s' should be accepted", input));
         }
@@ -325,7 +336,7 @@ public class DFAExecuteTest {
         @ValueSource(strings = {"b", "ab", "bb", "aab", "bbb", "abab", "bbbbbb"})
         @DisplayName("Should reject all strings not ending with 'a'")
         void testRejectedStrings(String input) {
-            Automaton.ExecutionResult result = dfa.execute(input);
+            ExecutionResult result = dfa.execute(input);
             assertFalse(result.isAccepted(), 
                 String.format("String '%s' should be rejected", input));
         }
@@ -343,7 +354,7 @@ public class DFAExecuteTest {
         })
         @DisplayName("Test various inputs with expected results")
         void testVariousInputs(String input, boolean expectedAccepted) {
-            Automaton.ExecutionResult result = dfa.execute(input);
+            ExecutionResult result = dfa.execute(input);
             assertEquals(expectedAccepted, result.isAccepted(),
                 String.format("String '%s' should be %s", 
                     input, expectedAccepted ? "accepted" : "rejected"));
@@ -362,7 +373,7 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("Trace should show complete execution path")
         void testCompleteTracePath() {
-            Automaton.ExecutionResult result = dfa.execute("aba");
+            ExecutionResult result = dfa.execute("aba");
             String trace = result.getTrace();
             
             assertNotNull(trace, "Trace should not be null");
@@ -375,7 +386,7 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("Trace for rejected string should show path until rejection")
         void testRejectedTrace() {
-            Automaton.ExecutionResult result = dfa.execute("ab");
+            ExecutionResult result = dfa.execute("ab");
             String trace = result.getTrace();
             
             assertNotNull(trace, "Trace should not be null for rejected string");
@@ -388,7 +399,7 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("Trace for empty string")
         void testEmptyStringTrace() {
-            Automaton.ExecutionResult result = dfa.execute("");
+            ExecutionResult result = dfa.execute("");
             String trace = result.getTrace();
             
             assertNotNull(trace, "Trace should not be null for empty string");
@@ -415,7 +426,7 @@ public class DFAExecuteTest {
             repeatedPattern.append("a");
             
             long startTime = System.currentTimeMillis();
-            Automaton.ExecutionResult result = dfa.execute(repeatedPattern.toString());
+            ExecutionResult result = dfa.execute(repeatedPattern.toString());
             long endTime = System.currentTimeMillis();
             
             assertTrue(result.isAccepted(), "Repeated pattern ending with 'a' should be accepted");
@@ -431,7 +442,7 @@ public class DFAExecuteTest {
             }
             
             long startTime = System.currentTimeMillis();
-            Automaton.ExecutionResult result = dfa.execute(longString.toString());
+            ExecutionResult result = dfa.execute(longString.toString());
             long endTime = System.currentTimeMillis();
             
             assertTrue(result.isAccepted(), "Long string of 'a's should be accepted");
@@ -457,7 +468,7 @@ public class DFAExecuteTest {
                                   "q1 -> q0 (b)\n";
             
             DFA parsedDFA = new DFA();
-            Automaton.ParseResult parseResult = parsedDFA.parse(dfaDefinition);
+            ParseResult parseResult = parsedDFA.parse(dfaDefinition);
             
             if (parseResult.isSuccess()) {
                 DFA automaton = (DFA) parseResult.getAutomaton();

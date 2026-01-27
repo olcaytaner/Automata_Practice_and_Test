@@ -1,31 +1,33 @@
 package grader;
 
-import guru.nidi.graphviz.engine.Format;
-import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.engine.GraphvizJdkEngine;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import common.Automaton;
+
 import ContextFreeGrammar.CFG;
 import DeterministicFiniteAutomaton.DFA;
 import NondeterministicFiniteAutomaton.NFA;
 import PushDownAutomaton.PDA;
-import RegularExpression.SyntaxTree.SyntaxTree;
+import RegularExpression.RegularExpression;
 import TuringMachine.TM;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import common.Automaton;
+import common.ParseResult;
+import guru.nidi.graphviz.engine.Format;
+import guru.nidi.graphviz.engine.Graphviz;
+import guru.nidi.graphviz.engine.GraphvizJdkEngine;
 
 /**
  * Exports all student exam results to a single comprehensive PDF.
@@ -371,7 +373,7 @@ public class StudentPdfExporter {
             }
 
             // Parse the answer content
-            Automaton.ParseResult parseResult = automaton.parse(answerContent);
+            ParseResult parseResult = automaton.parse(answerContent);
             if (!parseResult.isSuccess()) {
                 return null;
             }
@@ -417,7 +419,7 @@ public class StudentPdfExporter {
                     case ".cfg":
                         return new CFG();
                     case ".rex":
-                        return new SyntaxTree();
+                        return new RegularExpression();
                 }
             }
         }

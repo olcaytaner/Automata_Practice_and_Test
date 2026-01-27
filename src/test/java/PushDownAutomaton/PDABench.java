@@ -1,13 +1,13 @@
 package PushDownAutomaton;
 
-import common.Automaton;
-import common.TestCase;
-import common.TestFileParser;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+
+import common.ParseResult;
+import common.TestCase;
+import common.TestFileParser;
 
 public class PDABench {
     private static final double THRESHOLD_SECONDS = 1.0;
@@ -29,7 +29,7 @@ public class PDABench {
     private static void runScenario(String name, String pdaPath, String testPath) throws Exception {
         String pdaText = new String(Files.readAllBytes(Paths.get(pdaPath)), StandardCharsets.UTF_8);
         PDA pda = new PDA();
-        Automaton.ParseResult pr = pda.parse(pdaText);
+        ParseResult pr = pda.parse(pdaText);
         if (!pr.isSuccess()) throw new IllegalStateException("PDA parse failed: " + name);
 
         List<TestCase> tests = TestFileParser.parseTestFile(testPath).getTestCases();

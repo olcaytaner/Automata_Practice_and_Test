@@ -1,10 +1,14 @@
 package NondeterministicFiniteAutomaton;
 
 import common.Automaton;
-import common.Automaton.ValidationMessage.ValidationMessageType;
+import common.ExecutionResult;
+import common.MachineType;
 import common.InputNormalizer;
+import common.ParseResult;
 import common.State;
 import common.Symbol;
+import common.ValidationMessage;
+import common.ValidationMessage.ValidationMessageType;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -622,7 +626,7 @@ public class NFA extends Automaton {
             if (!startState.isStart()){
                 validationWarnings.add(new ValidationMessage("Start state is not a start state", -1, ValidationMessageType.ERROR));
             }
-            if (!startState.getName().matches(NFA.statePattern)){
+            if (!startState.getName().matches(statePattern)){
                 validationWarnings.add(new ValidationMessage("Start state does not match valid state name", -1, ValidationMessageType.ERROR));
             }
             if (!states.containsKey(startState.getName())){
@@ -654,7 +658,7 @@ public class NFA extends Automaton {
                 if (!finalState.isAccept()){
                     validationWarnings.add(new ValidationMessage("Final state: " + finalState.getName() + " is not a final state", -1, ValidationMessageType.ERROR));
                 }
-                if (!finalState.getName().matches(NFA.statePattern)){
+                if (!finalState.getName().matches(statePattern)){
                     validationWarnings.add(new ValidationMessage("Final state: " + finalState.getName() + " does not match valid state name", -1, ValidationMessageType.ERROR));
                 }
                 if (!states.containsKey(finalState.getName())){
@@ -705,7 +709,7 @@ public class NFA extends Automaton {
             if (!states.containsKey(fromState.getName())){
                 validationWarnings.add(new ValidationMessage("States map does not contain the transition fromState: " + fromState.getName(), -1, ValidationMessageType.ERROR));
             }
-            if (!fromState.getName().matches(NFA.statePattern)){
+            if (!fromState.getName().matches(statePattern)){
                 validationWarnings.add(new ValidationMessage("Transition fromState: " + fromState.getName() + " does not match valid state name", -1, ValidationMessageType.ERROR));
             }
 
@@ -722,7 +726,7 @@ public class NFA extends Automaton {
                     if (!states.containsKey(toState.getName())){
                         validationWarnings.add(new ValidationMessage("States map does not contain the transition toState: " + toState.getName(), -1, ValidationMessageType.ERROR));
                     }
-                    if (!toState.getName().matches(NFA.statePattern)){
+                    if (!toState.getName().matches(statePattern)){
                         validationWarnings.add(new ValidationMessage("Transition toState: " + toState.getName() + " does not match valid state name", -1, ValidationMessageType.ERROR));
                     }
                 }
@@ -743,7 +747,7 @@ public class NFA extends Automaton {
         int startCount = 0;
         int finalCount = 0;
         for (State state : states.values()){
-            if (!state.getName().matches(NFA.statePattern)){
+            if (!state.getName().matches(statePattern)){
                 validationWarnings.add(new ValidationMessage("State name: " + state.getName() + " does not match valid state name", -1, ValidationMessageType.ERROR));
             }
             if (state.isStart()){

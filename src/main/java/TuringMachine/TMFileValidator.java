@@ -13,8 +13,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import common.Automaton.ValidationMessage;
-import common.Automaton.ValidationMessage.ValidationMessageType;
+import common.ValidationMessage;
+import common.ValidationMessage.ValidationMessageType;
 
 /**
  * Validates a Turing Machine definition file.

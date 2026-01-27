@@ -10,6 +10,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import common.ValidationMessage.ValidationMessageType;
+
 /**
  * Executes test cases against automaton implementations.
  * Compares actual results with expected results and generates test reports.
@@ -473,17 +475,17 @@ public class TestRunner {
                 }
                 
                 try {
-                    Automaton.ExecutionResult execResult = automaton.execute(testCase.getInput());
+                    ExecutionResult execResult = automaton.execute(testCase.getInput());
 
                     // Check for validation errors FIRST - invalid automaton should fail all tests
                     boolean hasValidationError = execResult.getRuntimeMessages().stream()
-                        .anyMatch(msg -> msg.getType() == Automaton.ValidationMessage.ValidationMessageType.ERROR);
+                        .anyMatch(msg -> msg.getType() == ValidationMessageType.ERROR);
 
                     if (hasValidationError) {
                         // Automaton is invalid - stop processing and fail with clear message
                         String errorMessage = execResult.getRuntimeMessages().stream()
-                            .filter(msg -> msg.getType() == Automaton.ValidationMessage.ValidationMessageType.ERROR)
-                            .map(Automaton.ValidationMessage::getMessage)
+                            .filter(msg -> msg.getType() == ValidationMessageType.ERROR)
+                            .map(ValidationMessage::getMessage)
                             .collect(java.util.stream.Collectors.joining(", "));
 
                         result.addFailure("Automaton validation failed: " + errorMessage);
@@ -585,11 +587,11 @@ public class TestRunner {
      */
     public static TestCaseResult runSingleTest(Automaton automaton, String input, boolean expectedAccept, long timeoutMs) {
         try {
-            Future<Automaton.ExecutionResult> future = executor.submit(() -> 
+            Future<ExecutionResult> future = executor.submit(() -> 
                 automaton.execute(input)
             );
             
-            Automaton.ExecutionResult execResult;
+            ExecutionResult execResult;
             try {
                 execResult = future.get(timeoutMs, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {

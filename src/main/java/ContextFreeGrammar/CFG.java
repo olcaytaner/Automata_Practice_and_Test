@@ -1,11 +1,11 @@
 package ContextFreeGrammar;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,11 +14,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.BitSet;
-import java.util.stream.Collectors;
 
 import common.Automaton;
+import common.ExecutionResult;
+import common.MachineType;
+import common.ParseResult;
 import common.Symbol;
+import common.ValidationMessage;
 
 /**
  * Represents a Context-Free Grammar (CFG) with variables, terminals, productions, and a start symbol.

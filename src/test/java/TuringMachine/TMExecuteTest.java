@@ -15,7 +15,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import common.Automaton;
+import common.ExecutionResult;
+import common.ParseResult;
+import common.ValidationMessage;
 
 /**
  * Comprehensive JUnit 5 test class for Turing Machine execution functionality.
@@ -147,11 +149,11 @@ public class TMExecuteTest {
         @DisplayName("Execute should return ExecutionResult object")
         void testExecuteReturnsResult() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             assertTrue(parseResult.isSuccess(), "TM should parse successfully");
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("00");
+            ExecutionResult result = tm.execute("00");
             
             assertNotNull(result, "ExecutionResult should not be null");
             assertNotNull(result.getTrace(), "Trace should not be null");
@@ -162,7 +164,7 @@ public class TMExecuteTest {
         @DisplayName("Should accept strings with even number of 0s")
         void testAcceptEvenZeros() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
             assertTrue(tm.execute("").isAccepted(), "Empty string (0 zeros) should be accepted");
@@ -176,7 +178,7 @@ public class TMExecuteTest {
         @DisplayName("Should reject strings with odd number of 0s")
         void testRejectOddZeros() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
             assertFalse(tm.execute("0").isAccepted(), "'0' (1 zero) should be rejected");
@@ -194,10 +196,10 @@ public class TMExecuteTest {
         @DisplayName("Trace should contain tape configurations")
         void testTraceContainsTapeConfig() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("01");
+            ExecutionResult result = tm.execute("01");
             String trace = result.getTrace();
             
             assertNotNull(trace, "Trace should not be null");
@@ -210,10 +212,10 @@ public class TMExecuteTest {
         @DisplayName("Head movement should be tracked")
         void testHeadMovement() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("101");
+            ExecutionResult result = tm.execute("101");
             
             assertNotNull(result.getTrace(), "Should have trace with head movements");
             // Trace should show R (right) movements
@@ -223,11 +225,11 @@ public class TMExecuteTest {
         @DisplayName("Tape should be modified correctly")
         void testTapeModification() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(binaryIncrementTM);
+            ParseResult parseResult = tm.parse(binaryIncrementTM);
             tm = (TM) parseResult.getAutomaton();
             
             // Test binary increment
-            Automaton.ExecutionResult result = tm.execute("101"); // 5 in binary
+            ExecutionResult result = tm.execute("101"); // 5 in binary
             
             assertTrue(result.isAccepted(), "Binary increment should complete successfully");
             
@@ -248,10 +250,10 @@ public class TMExecuteTest {
         @DisplayName("Accepted result should have isAccepted() true")
         void testAcceptedResult() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("00");
+            ExecutionResult result = tm.execute("00");
             
             assertTrue(result.isAccepted(), "Result should be accepted");
             assertNotNull(result.getTrace(), "Accepted result should have trace");
@@ -261,10 +263,10 @@ public class TMExecuteTest {
         @DisplayName("Rejected result should have isAccepted() false")
         void testRejectedResult() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("0");
+            ExecutionResult result = tm.execute("0");
             
             assertFalse(result.isAccepted(), "Result should be rejected");
             assertNotNull(result.getTrace(), "Rejected result should have trace");
@@ -274,11 +276,11 @@ public class TMExecuteTest {
         @DisplayName("Runtime messages should be populated")
         void testRuntimeMessages() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("01");
-            List<Automaton.ValidationMessage> messages = result.getRuntimeMessages();
+            ExecutionResult result = tm.execute("01");
+            List<ValidationMessage> messages = result.getRuntimeMessages();
             
             assertNotNull(messages, "Runtime messages should not be null");
             // Messages may contain information about computation steps
@@ -293,7 +295,7 @@ public class TMExecuteTest {
         @DisplayName("Binary increment computation")
         void testBinaryIncrement() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(binaryIncrementTM);
+            ParseResult parseResult = tm.parse(binaryIncrementTM);
             tm = (TM) parseResult.getAutomaton();
             
             // Test various binary numbers
@@ -308,7 +310,7 @@ public class TMExecuteTest {
         @DisplayName("Palindrome checking")
         void testPalindromeChecking() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(palindromeTM);
+            ParseResult parseResult = tm.parse(palindromeTM);
             tm = (TM) parseResult.getAutomaton();
             
             // Test palindromes
@@ -332,7 +334,7 @@ public class TMExecuteTest {
         @DisplayName("String copying operation")
         void testStringCopying() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(copyTM);
+            ParseResult parseResult = tm.parse(copyTM);
             tm = (TM) parseResult.getAutomaton();
             
             // Test copying with separator
@@ -350,10 +352,10 @@ public class TMExecuteTest {
         @DisplayName("Empty string execution")
         void testEmptyString() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("");
+            ExecutionResult result = tm.execute("");
             
             assertNotNull(result, "Result should not be null for empty string");
             assertTrue(result.isAccepted(), "Empty string (0 zeros) should be accepted");
@@ -363,7 +365,7 @@ public class TMExecuteTest {
         @DisplayName("Very long string execution")
         void testVeryLongString() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
             StringBuilder longString = new StringBuilder();
@@ -371,7 +373,7 @@ public class TMExecuteTest {
                 longString.append("01"); // 100 zeros total (even)
             }
             
-            Automaton.ExecutionResult result = tm.execute(longString.toString());
+            ExecutionResult result = tm.execute(longString.toString());
             
             assertNotNull(result, "Result should not be null for long string");
             assertTrue(result.isAccepted(), "String with 100 zeros should be accepted");
@@ -396,10 +398,10 @@ public class TMExecuteTest {
         @DisplayName("Should reach accept state for valid input")
         void testReachAcceptState() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("00");
+            ExecutionResult result = tm.execute("00");
             
             assertTrue(result.isAccepted(), "Should reach accept state");
             
@@ -414,10 +416,10 @@ public class TMExecuteTest {
         @DisplayName("Should reach reject state for invalid input")
         void testReachRejectState() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("0");
+            ExecutionResult result = tm.execute("0");
             
             assertFalse(result.isAccepted(), "Should reach reject state");
             
@@ -436,7 +438,7 @@ public class TMExecuteTest {
         @BeforeEach
         void setUp() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
         }
         
@@ -444,7 +446,7 @@ public class TMExecuteTest {
         @ValueSource(strings = {"", "00", "11", "0011", "1100", "0000", "1111"})
         @DisplayName("Should accept strings with even number of 0s")
         void testAcceptedStrings(String input) {
-            Automaton.ExecutionResult result = tm.execute(input);
+            ExecutionResult result = tm.execute(input);
             assertTrue(result.isAccepted(), 
                 String.format("String '%s' should be accepted", input));
         }
@@ -453,7 +455,7 @@ public class TMExecuteTest {
         @ValueSource(strings = {"0", "000", "01", "10", "0001", "11110"})
         @DisplayName("Should reject strings with odd number of 0s")
         void testRejectedStrings(String input) {
-            Automaton.ExecutionResult result = tm.execute(input);
+            ExecutionResult result = tm.execute(input);
             assertFalse(result.isAccepted(), 
                 String.format("String '%s' should be rejected", input));
         }
@@ -473,7 +475,7 @@ public class TMExecuteTest {
         })
         @DisplayName("Test various inputs with expected results")
         void testVariousInputs(String input, boolean expectedAccepted) {
-            Automaton.ExecutionResult result = tm.execute(input);
+            ExecutionResult result = tm.execute(input);
             assertEquals(expectedAccepted, result.isAccepted(),
                 String.format("String '%s' should be %s", 
                     input, expectedAccepted ? "accepted" : "rejected"));
@@ -488,10 +490,10 @@ public class TMExecuteTest {
         @DisplayName("Trace should show complete computation")
         void testCompleteTrace() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("01");
+            ExecutionResult result = tm.execute("01");
             String trace = result.getTrace();
             
             assertNotNull(trace, "Trace should not be null");
@@ -504,10 +506,10 @@ public class TMExecuteTest {
         @DisplayName("Trace for rejected computation")
         void testRejectedTrace() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
-            Automaton.ExecutionResult result = tm.execute("0");
+            ExecutionResult result = tm.execute("0");
             String trace = result.getTrace();
             
             assertNotNull(trace, "Trace should not be null for rejected string");
@@ -523,7 +525,7 @@ public class TMExecuteTest {
         @DisplayName("Should handle long computations efficiently")
         void testLongComputation() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(simpleTM);
+            ParseResult parseResult = tm.parse(simpleTM);
             tm = (TM) parseResult.getAutomaton();
             
             StringBuilder longString = new StringBuilder();
@@ -532,7 +534,7 @@ public class TMExecuteTest {
             }
             
             long startTime = System.currentTimeMillis();
-            Automaton.ExecutionResult result = tm.execute(longString.toString());
+            ExecutionResult result = tm.execute(longString.toString());
             long endTime = System.currentTimeMillis();
             
             assertTrue(result.isAccepted(), "Long string with even zeros should be accepted");
@@ -543,7 +545,7 @@ public class TMExecuteTest {
         @DisplayName("Should handle complex computations")
         void testComplexComputation() {
             tm = new TM(null, null, null, null, null, null, null);
-            Automaton.ParseResult parseResult = tm.parse(binaryIncrementTM);
+            ParseResult parseResult = tm.parse(binaryIncrementTM);
             tm = (TM) parseResult.getAutomaton();
             
             // Test incrementing a large binary number
@@ -553,7 +555,7 @@ public class TMExecuteTest {
             }
             
             long startTime = System.currentTimeMillis();
-            Automaton.ExecutionResult result = tm.execute(largeBinary.toString());
+            ExecutionResult result = tm.execute(largeBinary.toString());
             long endTime = System.currentTimeMillis();
             
             assertTrue(result.isAccepted(), "Binary increment should complete");

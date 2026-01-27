@@ -9,10 +9,12 @@ import ContextFreeGrammar.CFG;
 import DeterministicFiniteAutomaton.DFA;
 import NondeterministicFiniteAutomaton.NFA;
 import PushDownAutomaton.PDA;
-import RegularExpression.SyntaxTree.SyntaxTree;
+import RegularExpression.RegularExpression;
 import TuringMachine.TM;
 import common.Automaton;
+import common.ParseResult;
 import common.TestRunner;
+import common.ValidationMessage;
 
 /**
  * Command-line tool for grading individual student exam submissions.
@@ -101,7 +103,7 @@ public class ExamGrader {
     }
 
     /**
-     * Load and parse an automaton from a file based on its extension.
+     * Load and parse a formal language from a file based on its extension.
      * Follows the same pattern as the UI application.
      *
      * @param file The automaton file
@@ -146,7 +148,7 @@ public class ExamGrader {
                 automaton = new CFG();
                 break;
             case ".rex":
-                automaton = new SyntaxTree();
+                automaton = new RegularExpression();
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported file extension: " + extension);
@@ -154,12 +156,12 @@ public class ExamGrader {
 
         // Parse the automaton (same as UI: automaton.parse() → parseResult.getAutomaton())
         // InputNormalizer handles format conversion for each type (including .rex)
-        Automaton.ParseResult parseResult = automaton.parse(content);
+        ParseResult parseResult = automaton.parse(content);
 
         if (!parseResult.isSuccess()) {
             StringBuilder errorMsg = new StringBuilder("Parse error:\n");
-            for (Automaton.ValidationMessage msg : parseResult.getValidationMessages()) {
-                if (msg.getType() == Automaton.ValidationMessage.ValidationMessageType.ERROR) {
+            for (ValidationMessage msg : parseResult.getValidationMessages()) {
+                if (msg.getType() == ValidationMessage.ValidationMessageType.ERROR) {
                     errorMsg.append(msg.toString()).append("\n");
                 }
             }
@@ -205,18 +207,18 @@ public class ExamGrader {
             TestRunner.TestResult testResult = TestRunner.runTests(automaton, testFilePath);
 
             // For regex files, check length limit BEFORE awarding any points
-            if (".rex".equals(detected.extension) && automaton instanceof SyntaxTree) {
-                SyntaxTree syntaxTree = (SyntaxTree) automaton;
+            if (".rex".equals(detected.extension) && automaton instanceof RegularExpression) {
+                RegularExpression regex = (RegularExpression) automaton;
                 Integer maxRegexLength = testResult.getMaxRegexLength();
 
                 if (maxRegexLength != null) {
-                    Automaton.ValidationMessage lengthValidation = syntaxTree.validateRegexLength(maxRegexLength);
+                    ValidationMessage lengthValidation = regex.validateRegexLength(maxRegexLength);
 
                     if (lengthValidation != null) {
                         // Length violation - automatic zero points
                         result.success = true; // File was processed successfully
                         result.regexLengthViolation = true;
-                        result.actualRegexLength = syntaxTree.getSanitizedRegexLength();
+                        result.actualRegexLength = regex.getSanitizedRegexLength();
                         result.maxAllowedRegexLength = maxRegexLength;
                         result.score = 0.0;
                         result.minPoints = testResult.getMinPoints();
@@ -247,7 +249,7 @@ public class ExamGrader {
                 Integer maxRules = testResult.getMaxRules();
 
                 if (maxRules != null) {
-                    Automaton.ValidationMessage rulesValidation = cfg.validateRulesCount(maxRules);
+                    ValidationMessage rulesValidation = cfg.validateRulesCount(maxRules);
 
                     if (rulesValidation != null) {
                         // Rules limit violation - automatic zero points
@@ -283,7 +285,7 @@ public class ExamGrader {
                 Integer maxTransitions = testResult.getMaxTransitions();
 
                 if (maxTransitions != null) {
-                    Automaton.ValidationMessage transitionsValidation = pda.validateTransitionsCount(maxTransitions);
+                    ValidationMessage transitionsValidation = pda.validateTransitionsCount(maxTransitions);
 
                     if (transitionsValidation != null) {
                         // Transitions limit violation - automatic zero points

@@ -1,24 +1,27 @@
-package RegularExpression.SyntaxTree;
+package RegularExpression;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import static RegularExpression.SyntaxTree.RegexOperator.*;
+import static RegularExpression.RegexOperator.CONCAT;
 
 /**
  * Represents a concatenation operation in a regular expression syntax tree.
  * <p>
- *     A {@code ConcatNode} is a {@link BinaryNode} whose left and right children
- *     are matched in sequence. It corresponds to placing two patterns next to
- *     each other in a regular expression. For example, in the regex
- *     <code>AB</code>, the concatenation of <code>A</code> and <code>B</code>
- *     would be represented by a {@code ConcatNode} with <code>A</code> as the
- *     left child and <code>B</code> as the right child.
+ * A {@code RegexConcatNode} is a binary node whose left and right children
+ * are matched in sequence. It corresponds to placing two patterns next to
+ * each other in a regular expression. For example, in the regex
+ * <code>AB</code>, the concatenation of <code>A</code> and <code>B</code>
+ * would be represented by a {@code RegexConcatNode} with <code>A</code>
+ * as the left child and <code>B</code> as the right child.
  * </p>
+ * Renamed from ConcatNode for clarity.
+ *
+ * @version 2.0
  */
-public class ConcatNode extends BinaryNode {
+public class RegexConcatNode extends RegexBinaryNode {
 
-    public ConcatNode(SyntaxTreeNode l, SyntaxTreeNode r) {
+    public RegexConcatNode(RegexNode l, RegexNode r) {
         super(l, r, CONCAT);
     }
 

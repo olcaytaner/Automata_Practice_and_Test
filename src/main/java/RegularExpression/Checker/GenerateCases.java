@@ -1,6 +1,6 @@
 package RegularExpression.Checker;
 
-import RegularExpression.SyntaxTree.RegularExpression;
+import RegularExpression.RegularExpression;
 
 
 public class GenerateCases {

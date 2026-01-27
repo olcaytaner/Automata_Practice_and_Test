@@ -1,19 +1,31 @@
 package TuringMachine;
 
-import common.Automaton;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import common.ExecutionResult;
+import common.MachineType;
+import common.ParseResult;
+import common.ValidationMessage;
+import common.ValidationMessage.ValidationMessageType;
 
 /**
  * JUnit 5 test class for Turing Machine functionality.
@@ -60,7 +72,7 @@ public class TMTest {
         @Test
         @DisplayName("TM should have correct machine type")
         void testMachineType() {
-            assertEquals(Automaton.MachineType.TM, tm.getType(), 
+            assertEquals(MachineType.TM, tm.getMachineType(),
                 "TM should have TM machine type");
         }
         
@@ -79,7 +91,7 @@ public class TMTest {
         @Test
         @DisplayName("Valid TM definition should parse successfully")
         void testParseValidTM() {
-            Automaton.ParseResult result = tm.parse(validTMContent);
+            ParseResult result = tm.parse(validTMContent);
             
             assertNotNull(result, "Parse result should not be null");
             assertNotNull(result.getAutomaton(), "Parse result should contain automaton");
@@ -95,7 +107,7 @@ public class TMTest {
         @Test
         @DisplayName("Invalid TM definition should fail parsing")
         void testParseInvalidTM() {
-            Automaton.ParseResult result = tm.parse(invalidTMContent);
+            ParseResult result = tm.parse(invalidTMContent);
             
             assertFalse(result.isSuccess(), "Invalid TM should fail parsing");
             assertFalse(result.getValidationMessages().isEmpty(), 
@@ -105,7 +117,7 @@ public class TMTest {
         @Test
         @DisplayName("Empty input should fail parsing")
         void testParseEmptyInput() {
-            Automaton.ParseResult result = tm.parse("");
+            ParseResult result = tm.parse("");
             
             assertFalse(result.isSuccess(), "Empty input should fail parsing");
             assertFalse(result.getValidationMessages().isEmpty(), 
@@ -129,7 +141,7 @@ public class TMTest {
         @BeforeEach
         void setupValidTM() {
             // Parse a valid TM for execution tests
-            Automaton.ParseResult result = tm.parse(validTMContent);
+            ParseResult result = tm.parse(validTMContent);
             assertTrue(result.isSuccess(), "Setup should parse valid TM");
             tm = (TM) result.getAutomaton();
         }
@@ -138,7 +150,7 @@ public class TMTest {
         @ValueSource(strings = {"0", "1", "00", "11", "010", "101"})
         @DisplayName("Execute with various input strings")
         void testExecuteWithInputStrings(String input) {
-            Automaton.ExecutionResult result = tm.execute(input);
+            ExecutionResult result = tm.execute(input);
             
             assertNotNull(result, "Execution result should not be null");
             // TM execution can accept or reject - both are valid outcomes
@@ -154,7 +166,7 @@ public class TMTest {
         @Test
         @DisplayName("Execute empty string")
         void testExecuteEmptyString() {
-            Automaton.ExecutionResult result = tm.execute("");
+            ExecutionResult result = tm.execute("");
             
             assertNotNull(result, "Execution result should not be null");
             assertNotNull(result.getTrace(), "Execution should have trace information");
@@ -181,17 +193,17 @@ public class TMTest {
         void testValidateValidTM() {
             tm.setInputText(validTMContent);
             
-            List<Automaton.ValidationMessage> messages = tm.validate();
+            List<ValidationMessage> messages = tm.validate();
             
             assertNotNull(messages, "Validation messages should not be null");
             
             // If validation is successful, check for success messages
-            Automaton.ParseResult parseResult = tm.parse(validTMContent);
+            ParseResult parseResult = tm.parse(validTMContent);
             if (parseResult.isSuccess()) {
                 // Valid TM should either have no messages or info messages
                 boolean hasOnlyInfoOrEmpty = messages.isEmpty() || 
                     messages.stream().allMatch(msg -> 
-                        msg.getType() == Automaton.ValidationMessage.ValidationMessageType.INFO);
+                        msg.getType() == ValidationMessageType.INFO);
                 assertTrue(hasOnlyInfoOrEmpty, "Valid TM should not have error/warning messages");
             }
         }
@@ -201,7 +213,7 @@ public class TMTest {
         void testValidateInvalidTM() {
             tm.setInputText(invalidTMContent);
             
-            List<Automaton.ValidationMessage> messages = tm.validate();
+            List<ValidationMessage> messages = tm.validate();
             
             assertNotNull(messages, "Validation messages should not be null");
             // TM validation behavior may vary - just test it doesn't crash
@@ -211,7 +223,7 @@ public class TMTest {
         @Test
         @DisplayName("Validate with empty input should handle gracefully")
         void testValidateEmptyInput() {
-            List<Automaton.ValidationMessage> messages = tm.validate();
+            List<ValidationMessage> messages = tm.validate();
             
             assertNotNull(messages, "Validation messages should not be null");
             // TM validation may return empty list for empty input - both behaviors are valid
@@ -260,7 +272,7 @@ public class TMTest {
             
             try {
                 String content = new String(Files.readAllBytes(Paths.get(filePath)));
-                Automaton.ParseResult result = tm.parse(content);
+                ParseResult result = tm.parse(content);
                 
                 assertTrue(result.isSuccess(), "Sample TM file should parse successfully");
                 
@@ -284,7 +296,7 @@ public class TMTest {
             try {
                 // Parse TM
                 String tmContent = new String(Files.readAllBytes(Paths.get(tmFilePath)));
-                Automaton.ParseResult parseResult = tm.parse(tmContent);
+                ParseResult parseResult = tm.parse(tmContent);
                 assertTrue(parseResult.isSuccess(), "TM should parse successfully");
                 
                 TM parsedTM = (TM) parseResult.getAutomaton();
@@ -302,7 +314,7 @@ public class TMTest {
                 
                 // Execute each test input
                 for (String input : testInputs) {
-                    Automaton.ExecutionResult result = parsedTM.execute(input);
+                    ExecutionResult result = parsedTM.execute(input);
                     assertNotNull(result, "Execution result should not be null for input: " + input);
                     assertNotNull(result.getTrace(), "Execution should have trace for input: " + input);
                 }

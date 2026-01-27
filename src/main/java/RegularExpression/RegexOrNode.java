@@ -1,23 +1,26 @@
-package RegularExpression.SyntaxTree;
+package RegularExpression;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static RegularExpression.SyntaxTree.RegexOperator.*;
+import static RegularExpression.RegexOperator.OR;
 
 /**
- * Represents the "or" ({@value RegularExpression.SyntaxTree.RegexOperator#OR}) operation in a regular expression.
+ * Represents the "or" ({@value RegexOperator#OR}) operation in a regular expression.
  * Matches either the left or the right child pattern (or both, if applicable).
  * <p>
- * For example, in the regex <code>1{@value RegularExpression.SyntaxTree.RegexOperator#OR}2</code>,
- * the operator would be the {@code OrNode}, with
+ * For example, in the regex <code>1{@value RegexOperator#OR}2</code>,
+ * the operator would be the {@code RegexOrNode}, with
  * <code>'1'</code> as the left child and <code>'2'</code> as the right child.
  * </p>
+ * Renamed from OrNode for clarity.
+ *
+ * @version 2.0
  */
-public class OrNode extends BinaryNode {
+public class RegexOrNode extends RegexBinaryNode {
 
-    public OrNode(SyntaxTreeNode l, SyntaxTreeNode r) {
+    public RegexOrNode(RegexNode l, RegexNode r) {
         super(l, r, OR);
     }
 
