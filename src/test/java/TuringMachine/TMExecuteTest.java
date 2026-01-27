@@ -50,63 +50,80 @@ public class TMExecuteTest {
                   "q1 1 -> q1 1 R\n" +
                   "q1 _ -> q_reject _ R\n";
         
-        // TM that increments a binary number by 1
-        binaryIncrementTM = "states: q0 q1 q2 q_accept q_reject\n" +
+        // TM that increments a binary number (little-endian: LSB first)
+        // Works with right-infinite tape by processing left-to-right only
+        // Example: "011" (little-endian for 6) -> "111" (little-endian for 7)
+        binaryIncrementTM = "states: q0 q_accept q_reject\n" +
                            "input_alphabet: 0 1\n" +
                            "tape_alphabet: 0 1 _\n" +
                            "start: q0\n" +
                            "accept: q_accept\n" +
                            "REJECT: q_reject\n" +
                            "transitions:\n" +
-                           "q0 0 -> q0 0 R\n" +
-                           "q0 1 -> q0 1 R\n" +
-                           "q0 _ -> q1 _ L\n" +
-                           "q1 0 -> q2 1 L\n" +
-                           "q1 1 -> q1 0 L\n" +
-                           "q1 _ -> q2 1 R\n" +
-                           "q2 0 -> q2 0 L\n" +
-                           "q2 1 -> q2 1 L\n" +
-                           "q2 _ -> q_accept _ R\n";
+                           "# Increment: 0->1 done, 1->0 carry right\n" +
+                           "q0 0 -> q_accept 1 R\n" +
+                           "q0 1 -> q0 0 R\n" +
+                           "q0 _ -> q_accept 1 R\n";
         
         // TM that checks if a string is a palindrome
-        palindromeTM = "states: q0 q1 q2 q3 q4 q5 q6 q_accept q_reject\n" +
+        // For right-infinite tape: first shifts input right, adds $ marker at pos 0
+        // Then runs standard palindrome algorithm using $ as left boundary
+        // States: q10=shift start, q11=carry 0, q12=carry 1, q13=go back
+        //         q0-q6=palindrome logic
+        palindromeTM = "states: q0 q1 q2 q3 q4 q5 q6 q10 q11 q12 q13 q_accept q_reject\n" +
                       "input_alphabet: 0 1\n" +
-                      "tape_alphabet: 0 1 X _\n" +
-                      "start: q0\n" +
+                      "tape_alphabet: 0 1 X $ _\n" +
+                      "start: q10\n" +
                       "accept: q_accept\n" +
                       "reject: q_reject\n" +
                       "transitions:\n" +
-                      "# Initial state - read first character\n" +
+                      "# Phase 1: Shift input right, place $ at position 0\n" +
+                      "q10 0 -> q11 $ R\n" +
+                      "q10 1 -> q12 $ R\n" +
+                      "q10 _ -> q_accept _ R\n" +
+                      "# q11: carry '0', shift rest right\n" +
+                      "q11 0 -> q11 0 R\n" +
+                      "q11 1 -> q12 0 R\n" +
+                      "q11 _ -> q13 0 L\n" +
+                      "# q12: carry '1', shift rest right\n" +
+                      "q12 0 -> q11 1 R\n" +
+                      "q12 1 -> q12 1 R\n" +
+                      "q12 _ -> q13 1 L\n" +
+                      "# q13: return to $ marker\n" +
+                      "q13 0 -> q13 0 L\n" +
+                      "q13 1 -> q13 1 L\n" +
+                      "q13 $ -> q0 $ R\n" +
+                      "# Phase 2: Standard palindrome check\n" +
                       "q0 0 -> q1 X R\n" +
                       "q0 1 -> q2 X R\n" +
                       "q0 X -> q0 X R\n" +
                       "q0 _ -> q_accept _ R\n" +
-                      "# Scanned 0 - find rightmost unprocessed\n" +
+                      "# q1: scanned 0, find rightmost\n" +
                       "q1 0 -> q1 0 R\n" +
                       "q1 1 -> q1 1 R\n" +
                       "q1 X -> q3 X L\n" +
                       "q1 _ -> q3 _ L\n" +
-                      "# Scanned 1 - find rightmost unprocessed\n" +
+                      "# q2: scanned 1, find rightmost\n" +
                       "q2 0 -> q2 0 R\n" +
                       "q2 1 -> q2 1 R\n" +
                       "q2 X -> q4 X L\n" +
                       "q2 _ -> q4 _ L\n" +
-                      "# Looking for last char to match 0\n" +
+                      "# q3: match last char with 0\n" +
                       "q3 X -> q3 X L\n" +
                       "q3 0 -> q5 X L\n" +
                       "q3 1 -> q_reject 1 L\n" +
-                      "q3 _ -> q_accept _ R\n" +
-                      "# Looking for last char to match 1\n" +
+                      "q3 $ -> q_accept $ R\n" +
+                      "# q4: match last char with 1\n" +
                       "q4 X -> q4 X L\n" +
                       "q4 1 -> q5 X L\n" +
                       "q4 0 -> q_reject 0 L\n" +
-                      "q4 _ -> q_accept _ R\n" +
-                      "# Return to start\n" +
+                      "q4 $ -> q_accept $ R\n" +
+                      "# q5: return to $ marker\n" +
                       "q5 0 -> q5 0 L\n" +
                       "q5 1 -> q5 1 L\n" +
                       "q5 X -> q5 X L\n" +
-                      "q5 _ -> q6 _ R\n" +
-                      "# Find first unprocessed\n" +
+                      "q5 $ -> q6 $ R\n" +
+                      "# q6: find first unprocessed\n" +
                       "q6 X -> q6 X R\n" +
                       "q6 0 -> q0 0 L\n" +
                       "q6 1 -> q0 1 L\n" +
