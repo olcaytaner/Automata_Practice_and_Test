@@ -36,51 +36,49 @@ public class PDAExecuteTest {
         pda = new PDA();
         
         // Simple PDA that accepts balanced parentheses
-        balancedParenthesesPDA = "states: q0 q1 q2\n" +
+        // Uses eps-pop to push without popping (stack grows)
+        balancedParenthesesPDA = "states: q0 q2\n" +
                                  "alphabet: ( )\n" +
-                                 "stack_alphabet: ( Z\n" +
+                                 "stack_alphabet: L Z\n" +
                                  "start: q0\n" +
                                  "stack_start: Z\n" +
                                  "finals: q2\n" +
                                  "transitions:\n" +
-                                 "q0 ( Z -> q0 (Z\n" +
-                                 "q0 ( ( -> q0 ((\n" +
-                                 "q0 ) ( -> q0 eps\n" +
+                                 "q0 ( eps -> q0 L\n" +
+                                 "q0 ) L -> q0 eps\n" +
                                  "q0 eps Z -> q2 eps\n";
         
-        // PDA that accepts a^n b^n
+        // PDA that accepts a^n b^n (n >= 1)
+        // Uses eps-pop to push without popping (stack grows)
         anbnPDA = "states: q0 q1 q2\n" +
                   "alphabet: a b\n" +
-                  "stack_alphabet: a Z\n" +
+                  "stack_alphabet: A Z\n" +
                   "start: q0\n" +
                   "stack_start: Z\n" +
                   "finals: q2\n" +
                   "transitions:\n" +
-                  "q0 a Z -> q0 aZ\n" +
-                  "q0 a a -> q0 aa\n" +
-                  "q0 b a -> q1 eps\n" +
-                  "q1 b a -> q1 eps\n" +
+                  "q0 a eps -> q0 A\n" +
+                  "q0 b A -> q1 eps\n" +
+                  "q1 b A -> q1 eps\n" +
                   "q1 eps Z -> q2 eps\n";
         
-        // PDA for palindromes over {a, b}
+        // PDA for even-length palindromes over {a, b}
+        // Uses eps-pop to push (first half), then pops to match (second half)
+        // Nondeterministically guesses the middle
         palindromePDA = "states: q0 q1 q2\n" +
                        "alphabet: a b\n" +
-                       "stack_alphabet: a b Z\n" +
+                       "stack_alphabet: A B Z\n" +
                        "start: q0\n" +
                        "stack_start: Z\n" +
                        "finals: q2\n" +
                        "transitions:\n" +
-                       "q0 a Z -> q0 aZ\n" +
-                       "q0 b Z -> q0 bZ\n" +
-                       "q0 a a -> q0 aa\n" +
-                       "q0 a b -> q0 ab\n" +
-                       "q0 b a -> q0 ba\n" +
-                       "q0 b b -> q0 bb\n" +
+                       "q0 a eps -> q0 A\n" +
+                       "q0 b eps -> q0 B\n" +
                        "q0 eps Z -> q1 Z\n" +
-                       "q0 eps a -> q1 a\n" +
-                       "q0 eps b -> q1 b\n" +
-                       "q1 a a -> q1 eps\n" +
-                       "q1 b b -> q1 eps\n" +
+                       "q0 eps A -> q1 A\n" +
+                       "q0 eps B -> q1 B\n" +
+                       "q1 a A -> q1 eps\n" +
+                       "q1 b B -> q1 eps\n" +
                        "q1 eps Z -> q2 eps\n";
     }
 
