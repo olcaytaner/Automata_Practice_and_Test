@@ -202,8 +202,17 @@ public class TM extends Automaton {
         tape.appendTapeTo(trace);
         trace.append("\n");
 
+        // Step limit to prevent infinite loops and memory exhaustion
+        final int MAX_STEPS = 100000;
+        int stepCount = 0;
+
         while (!currentState.isAccept() && !currentState.isReject()) {
+            if (stepCount >= MAX_STEPS) {
+                trace.append("Execution halted: step limit (").append(MAX_STEPS).append(") exceeded\n");
+                return new ExecutionResult(false, new ArrayList<>(), trace.toString());
+            }
             step();
+            stepCount++;
             trace.append("State: ").append(currentState.getName()).append(", Tape: ");
             tape.appendTapeTo(trace);
             trace.append("\n");
