@@ -30,22 +30,7 @@ public abstract class Automaton implements Visualizable {
   }
 
   public String getFileExtension() {
-    switch (type) {
-      case DFA:
-        return ".dfa";
-      case NFA:
-        return ".nfa";
-      case PDA:
-        return ".pda";
-      case TM:
-        return ".tm";
-      case CFG:
-        return ".cfg";
-      case REGEX:
-        return ".rex";
-      default:
-        return ".txt";
-    }
+    return type != null ? type.getExtension() : ".undefined";
   }
 
   @Override

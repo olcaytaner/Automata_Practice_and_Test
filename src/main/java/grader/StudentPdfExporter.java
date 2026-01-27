@@ -24,6 +24,7 @@ import PushDownAutomaton.PDA;
 import RegularExpression.RegularExpression;
 import TuringMachine.TM;
 import common.Automaton;
+import common.MachineType;
 import common.ParseResult;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
@@ -74,7 +75,7 @@ public class StudentPdfExporter {
      */
     private static String readAnswerFile(String studentFolder, String questionId) {
         // Try different extensions
-        String[] extensions = {".dfa", ".nfa", ".pda", ".tm", ".cfg", ".rex"};
+        String[] extensions = MachineType.getAllExtensions();
 
         for (String ext : extensions) {
             File file = new File(studentFolder, questionId + ext);
@@ -401,7 +402,7 @@ public class StudentPdfExporter {
      */
     private static Automaton createAutomatonFromFile(String studentFolder, String questionId) {
         // Try all possible extensions to find which file exists
-        String[] extensions = {".dfa", ".nfa", ".pda", ".tm", ".cfg", ".rex"};
+        String[] extensions = MachineType.getAllExtensions();
 
         for (String ext : extensions) {
             File file = new File(studentFolder, questionId + ext);

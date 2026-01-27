@@ -57,13 +57,7 @@ public class MainPanel extends JPanel {
 
     public class FileManager {
         public String getExtensionForAutomaton(Automaton automaton) {
-            if (automaton instanceof NFA) return ".nfa";
-            if (automaton instanceof DFA) return ".dfa";
-            if (automaton instanceof PDA) return ".pda";
-            if (automaton instanceof TM) return ".tm";
-            if (automaton instanceof CFG) return ".cfg";
-            if (automaton instanceof RegularExpression) return ".rex";
-            return ".txt";
+            return automaton.getFileExtension();
         }
 
         public Color getColorForExtension(String extension) {

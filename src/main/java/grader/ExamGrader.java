@@ -12,6 +12,7 @@ import PushDownAutomaton.PDA;
 import RegularExpression.RegularExpression;
 import TuringMachine.TM;
 import common.Automaton;
+import common.MachineType;
 import common.ParseResult;
 import common.TestRunner;
 import common.ValidationMessage;
@@ -90,7 +91,7 @@ public class ExamGrader {
      * @return DetectedFile containing the file and extension, or null if not found
      */
     private static DetectedFile detectAutomatonFile(String studentFolder, String questionId) {
-        String[] extensions = {".dfa", ".nfa", ".rex", ".pda", ".tm", ".cfg"};
+        String[] extensions = MachineType.getAllExtensions();
 
         for (String ext : extensions) {
             File file = new File(Paths.get(studentFolder, questionId + ext).toString());
