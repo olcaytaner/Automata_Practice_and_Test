@@ -22,30 +22,38 @@ public class ConcatNode extends BinaryNode {
         super(l, r, CONCAT);
     }
 
+    @Override
     public Set<Integer> match(String s, int pos) {
-        HashSet<Integer> res = new HashSet<>();
+        Set<Integer> res = new HashSet<>();
         Set<Integer> mids = leftChild.match(s, pos);
-        for (int mid : mids)
+        for (int mid : mids) {
             res.addAll(rightChild.match(s, mid));
+        }
         return res;
     }
 
+    @Override
     public String generateOneCase() {
         return leftChild.generateOneCase() + rightChild.generateOneCase();
     }
 
+    @Override
     public String generateOneCase(int maxStarRepeat) {
         return leftChild.generateOneCase(maxStarRepeat) + rightChild.generateOneCase(maxStarRepeat);
     }
 
+    @Override
     public Set<String> generateCasesExhaustive(int maxLen) {
         Set<String> left = leftChild.generateCasesExhaustive(maxLen);
         Set<String> right = rightChild.generateCasesExhaustive(maxLen);
         Set<String> res = new HashSet<>();
-        for (String s1 : left)
-            for (String s2 : right)
-                if (s1.length() + s2.length() <= maxLen)
+        for (String s1 : left) {
+            for (String s2 : right) {
+                if (s1.length() + s2.length() <= maxLen) {
                     res.add(s1 + s2);
+                }
+            }
+        }
         return res;
     }
 }

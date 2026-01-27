@@ -1,6 +1,7 @@
 package RegularExpression.SyntaxTree;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Represents the Kleene star (<code>{@value RegularExpression.SyntaxTree.RegexOperator#STAR}</code>)
@@ -15,13 +16,16 @@ import java.util.*;
  */
 public class StarNode extends UnaryNode {
 
+    private static final int DEFAULT_MAX_REPEAT = 4;
+
     public StarNode(SyntaxTreeNode child) {
         super(child);
     }
 
+    @Override
     public Set<Integer> match(String s, int pos) {
         Set<Integer> res = new HashSet<>();
-        Deque<Integer> stack = new ArrayDeque<>(); // bfs will also work
+        Deque<Integer> stack = new ArrayDeque<>();
 
         res.add(pos); // because * allows 0 repetitions
         stack.push(pos);
@@ -39,28 +43,35 @@ public class StarNode extends UnaryNode {
         return res;
     }
 
+    @Override
     public String generateOneCase() {
-        Random rand = new Random();
-        int repeat = rand.nextInt(4);
+        int repeat = ThreadLocalRandom.current().nextInt(DEFAULT_MAX_REPEAT);
         String base = child.generateOneCase();
-        StringBuilder sb = new StringBuilder();
+        if (repeat == 0 || base.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(base.length() * repeat);
         for (int i = 0; i < repeat; i++) {
             sb.append(base);
         }
         return sb.toString();
     }
 
+    @Override
     public String generateOneCase(int maxStarRepeat) {
-        Random rand = new Random();
-        int repeat = rand.nextInt(maxStarRepeat + 1);
+        int repeat = ThreadLocalRandom.current().nextInt(maxStarRepeat + 1);
         String base = child.generateOneCase(maxStarRepeat);
-        StringBuilder sb = new StringBuilder();
+        if (repeat == 0 || base.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(base.length() * repeat);
         for (int i = 0; i < repeat; i++) {
             sb.append(base);
         }
         return sb.toString();
     }
 
+    @Override
     public Set<String> generateCasesExhaustive(int maxLen) {
         Set<String> base = child.generateCasesExhaustive(maxLen);
         Set<String> res = new HashSet<>();
@@ -71,9 +82,12 @@ public class StarNode extends UnaryNode {
         while (!q.isEmpty()) {
             String prefix = q.poll();
             res.add(prefix);
-            for (String s : base)
-                if (prefix.length() + s.length() <= maxLen && !res.contains(prefix + s))
-                    q.add(prefix + s);
+            for (String s : base) {
+                String combined = prefix + s;
+                if (combined.length() <= maxLen && !res.contains(combined)) {
+                    q.add(combined);
+                }
+            }
         }
 
         return res;

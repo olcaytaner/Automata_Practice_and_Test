@@ -1,8 +1,8 @@
 package RegularExpression.SyntaxTree;
 
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static RegularExpression.SyntaxTree.RegexOperator.*;
 
@@ -21,27 +21,29 @@ public class OrNode extends BinaryNode {
         super(l, r, OR);
     }
 
+    @Override
     public Set<Integer> match(String s, int pos) {
-        HashSet<Integer> res = new HashSet<>();
+        Set<Integer> res = new HashSet<>();
         res.addAll(leftChild.match(s, pos));
         res.addAll(rightChild.match(s, pos));
         return res;
     }
 
+    @Override
     public String generateOneCase() {
-        Random rand = new Random();
-        boolean l = rand.nextBoolean();
-        if (l) return leftChild.generateOneCase();
-        return rightChild.generateOneCase();
+        return ThreadLocalRandom.current().nextBoolean()
+                ? leftChild.generateOneCase()
+                : rightChild.generateOneCase();
     }
 
+    @Override
     public String generateOneCase(int maxStarRepeat) {
-        Random rand = new Random();
-        boolean l = rand.nextBoolean();
-        if (l) return leftChild.generateOneCase(maxStarRepeat);
-        return rightChild.generateOneCase(maxStarRepeat);
+        return ThreadLocalRandom.current().nextBoolean()
+                ? leftChild.generateOneCase(maxStarRepeat)
+                : rightChild.generateOneCase(maxStarRepeat);
     }
 
+    @Override
     public Set<String> generateCasesExhaustive(int maxLen) {
         Set<String> res = new HashSet<>();
         res.addAll(leftChild.generateCasesExhaustive(maxLen));
