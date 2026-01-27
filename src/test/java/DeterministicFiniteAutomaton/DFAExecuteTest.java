@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import common.ExecutionResult;
+import common.FSATransition;
 import common.ParseResult;
 import common.State;
 import common.Symbol;
@@ -36,7 +37,7 @@ public class DFAExecuteTest {
     private Set<State> states;
     private Set<Symbol> alphabet;
     private Set<State> finalStates;
-    private Set<Transition> transitions;
+    private Set<FSATransition> transitions;
 
     @BeforeEach
     void setUp() {
@@ -62,10 +63,10 @@ public class DFAExecuteTest {
         finalStates.add(q1);
         
         transitions = new HashSet<>();
-        transitions.add(new Transition(q0, new Symbol('a'), q1));
-        transitions.add(new Transition(q0, new Symbol('b'), q0));
-        transitions.add(new Transition(q1, new Symbol('a'), q1));
-        transitions.add(new Transition(q1, new Symbol('b'), q0));
+        transitions.add(new FSATransition(q0, new Symbol('a'), q1));
+        transitions.add(new FSATransition(q0, new Symbol('b'), q0));
+        transitions.add(new FSATransition(q1, new Symbol('a'), q1));
+        transitions.add(new FSATransition(q1, new Symbol('b'), q0));
         
         return new DFA(states, alphabet, finalStates, q0, transitions);
     }
@@ -242,7 +243,7 @@ public class DFAExecuteTest {
             finalStates.add(q0);
             
             transitions = new HashSet<>();
-            transitions.add(new Transition(q0, new Symbol('a'), q0));
+            transitions.add(new FSATransition(q0, new Symbol('a'), q0));
             
             DFA simpleDFA = new DFA(states, alphabet, finalStates, q0, transitions);
             
@@ -269,8 +270,8 @@ public class DFAExecuteTest {
             finalStates = new HashSet<>(); // Empty set of final states
             
             transitions = new HashSet<>();
-            transitions.add(new Transition(q0, new Symbol('a'), q1));
-            transitions.add(new Transition(q1, new Symbol('a'), q0));
+            transitions.add(new FSATransition(q0, new Symbol('a'), q1));
+            transitions.add(new FSATransition(q1, new Symbol('a'), q0));
             
             DFA noFinalDFA = new DFA(states, alphabet, finalStates, q0, transitions);
             
@@ -301,10 +302,10 @@ public class DFAExecuteTest {
             finalStates.add(q1);
             
             transitions = new HashSet<>();
-            transitions.add(new Transition(q0, new Symbol('a'), q1));
-            transitions.add(new Transition(q1, new Symbol('a'), q1));
+            transitions.add(new FSATransition(q0, new Symbol('a'), q1));
+            transitions.add(new FSATransition(q1, new Symbol('a'), q1));
             // q2 has no incoming transitions - unreachable
-            transitions.add(new Transition(q2, new Symbol('a'), q2));
+            transitions.add(new FSATransition(q2, new Symbol('a'), q2));
             
             DFA unreachableDFA = new DFA(states, alphabet, finalStates, q0, transitions);
             

@@ -1,5 +1,6 @@
 package TuringMachine;
 
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -107,13 +108,13 @@ public class TMParser {
                 char symbolToRead = m.group(2).charAt(0);
                 String toStateName = m.group(3);
                 char symbolToWrite = m.group(4).charAt(0);
-                Direction direction = m.group(5).equalsIgnoreCase("R") ? Direction.RIGHT : Direction.LEFT;
+                TMTransition.Direction direction = m.group(5).equalsIgnoreCase("R") ? TMTransition.Direction.RIGHT : TMTransition.Direction.LEFT;
 
                 State fromState = context.stateMap.get(fromStateName);
                 State toState = context.stateMap.get(toStateName);
 
                 ConfigurationKey key = new ConfigurationKey(fromState, symbolToRead);
-                Transition transition = new Transition(toState, symbolToWrite, direction);
+                TMTransition transition = new TMTransition(fromState, symbolToRead, toState, symbolToWrite, direction);
 
                 context.transitionFunction.put(key, transition);
             }
@@ -127,7 +128,7 @@ public class TMParser {
         final Set<State> states = new HashSet<>();
         final Alphabet inputAlphabet = new Alphabet();
         final Alphabet tapeAlphabet = new Alphabet();
-        final Map<ConfigurationKey, Transition> transitionFunction = new HashMap<>();
+        final Map<ConfigurationKey, TMTransition> transitionFunction = new HashMap<>();
         State startState, acceptState, rejectState;
     }
 }

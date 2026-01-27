@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import common.ExecutionResult;
+import common.FSATransition;
 import common.ParseResult;
 import common.State;
 import common.Symbol;
@@ -29,7 +30,7 @@ import common.ValidationMessage;
 public class ExecuteTest {
 
     private NFA nfa;
-    private Map<State, List<Transition>> transitions;
+    private Map<State, List<FSATransition>> transitions;
     private State startState;
     private State state2;
     private State state3;
@@ -68,16 +69,16 @@ public class ExecuteTest {
         alphabet.add(symbol3);
         alphabet.add(epsilon);
 
-        Transition transition = new Transition(startState, state2, symbol2);
-        Transition transition2 = new Transition(startState, startState, symbol1);
-        Transition transition3 = new Transition(state2, state3, symbol3);
+        FSATransition transition = new FSATransition(startState, symbol2, state2);
+        FSATransition transition2 = new FSATransition(startState, symbol1, startState);
+        FSATransition transition3 = new FSATransition(state2, symbol3, state3);
 
-        List<Transition> transitionsFromState1 = new ArrayList<>();
+        List<FSATransition> transitionsFromState1 = new ArrayList<>();
         transitionsFromState1.add(transition);
         transitionsFromState1.add(transition2);
         transitions.put(startState, transitionsFromState1);
 
-        List<Transition> transitionsFromState2 = new ArrayList<>();
+        List<FSATransition> transitionsFromState2 = new ArrayList<>();
         transitionsFromState2.add(transition3);
         transitions.put(state2, transitionsFromState2);
 

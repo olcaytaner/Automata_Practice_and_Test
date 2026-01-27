@@ -1,5 +1,6 @@
 package DeterministicFiniteAutomaton;
 
+import common.FSATransition;
 import common.State;
 import common.Symbol;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +18,7 @@ public class DFATest {
     private Set<State> states;
     private Set<Symbol> alphabet;
     private Set<State> finalStates;
-    private Set<Transition> transitions;
+    private Set<FSATransition> transitions;
     private State q0, q1, q2, q3, q4, q5, q6, q7;
 
     @BeforeEach
@@ -69,30 +70,30 @@ public class DFATest {
 
         // Create transitions based on dfa.txt
         transitions = new HashSet<>();
-        transitions.add(new Transition(startState, new Symbol('c'), startState));
-        transitions.add(new Transition(startState, new Symbol('a'), q1));
-        transitions.add(new Transition(startState, new Symbol('b'), q1));
-        transitions.add(new Transition(q1, new Symbol('a'), q2));
-        transitions.add(new Transition(q1, new Symbol('b'), q3));
-        transitions.add(new Transition(q1, new Symbol('c'), q1));
-        transitions.add(new Transition(q2, new Symbol('a'), q2));
-        transitions.add(new Transition(q2, new Symbol('c'), q2));
-        transitions.add(new Transition(q2, new Symbol('b'), q4));
-        transitions.add(new Transition(q3, new Symbol('a'), q4));
-        transitions.add(new Transition(q3, new Symbol('b'), q3));
-        transitions.add(new Transition(q3, new Symbol('c'), q3));
-        transitions.add(new Transition(q4, new Symbol('a'), new State("q5", false, true)));
-        transitions.add(new Transition(q4, new Symbol('b'), q6));
-        transitions.add(new Transition(q4, new Symbol('c'), q6));
-        transitions.add(new Transition(new State("q5", false, true), new Symbol('a'), new State("q5", false, true)));
-        transitions.add(new Transition(new State("q5", false, true), new Symbol('b'), new State("q5", false, true)));
-        transitions.add(new Transition(new State("q5", false, true), new Symbol('c'), new State("q5", false, true)));
-        transitions.add(new Transition(q6, new Symbol('a'), new State("q7", false, true)));
-        transitions.add(new Transition(q6, new Symbol('b'), startState));
-        transitions.add(new Transition(q6, new Symbol('c'), startState));
-        transitions.add(new Transition(new State("q7", false, true), new Symbol('a'), new State("q7", false, true)));
-        transitions.add(new Transition(new State("q7", false, true), new Symbol('b'), new State("q7", false, true)));
-        transitions.add(new Transition(new State("q7", false, true), new Symbol('c'), new State("q7", false, true)));
+        transitions.add(new FSATransition(startState, new Symbol('c'), startState));
+        transitions.add(new FSATransition(startState, new Symbol('a'), q1));
+        transitions.add(new FSATransition(startState, new Symbol('b'), q1));
+        transitions.add(new FSATransition(q1, new Symbol('a'), q2));
+        transitions.add(new FSATransition(q1, new Symbol('b'), q3));
+        transitions.add(new FSATransition(q1, new Symbol('c'), q1));
+        transitions.add(new FSATransition(q2, new Symbol('a'), q2));
+        transitions.add(new FSATransition(q2, new Symbol('c'), q2));
+        transitions.add(new FSATransition(q2, new Symbol('b'), q4));
+        transitions.add(new FSATransition(q3, new Symbol('a'), q4));
+        transitions.add(new FSATransition(q3, new Symbol('b'), q3));
+        transitions.add(new FSATransition(q3, new Symbol('c'), q3));
+        transitions.add(new FSATransition(q4, new Symbol('a'), new State("q5", false, true)));
+        transitions.add(new FSATransition(q4, new Symbol('b'), q6));
+        transitions.add(new FSATransition(q4, new Symbol('c'), q6));
+        transitions.add(new FSATransition(new State("q5", false, true), new Symbol('a'), new State("q5", false, true)));
+        transitions.add(new FSATransition(new State("q5", false, true), new Symbol('b'), new State("q5", false, true)));
+        transitions.add(new FSATransition(new State("q5", false, true), new Symbol('c'), new State("q5", false, true)));
+        transitions.add(new FSATransition(q6, new Symbol('a'), new State("q7", false, true)));
+        transitions.add(new FSATransition(q6, new Symbol('b'), startState));
+        transitions.add(new FSATransition(q6, new Symbol('c'), startState));
+        transitions.add(new FSATransition(new State("q7", false, true), new Symbol('a'), new State("q7", false, true)));
+        transitions.add(new FSATransition(new State("q7", false, true), new Symbol('b'), new State("q7", false, true)));
+        transitions.add(new FSATransition(new State("q7", false, true), new Symbol('c'), new State("q7", false, true)));
 
         // Create DFA
         dfa = new DFA(states, alphabet, finalStates, startState, transitions);
@@ -167,8 +168,8 @@ public class DFATest {
             Set<State> finalStates = new HashSet<>();
             finalStates.add(s0);
 
-            Set<Transition> selfLoop = new HashSet<>();
-            selfLoop.add(new Transition(s0, new Symbol('a'), s0));
+            Set<FSATransition> selfLoop = new HashSet<>();
+            selfLoop.add(new FSATransition(s0, new Symbol('a'), s0));
 
             DFA simpleDFA = new DFA(singleState, simpleAlphabet, finalStates, s0, selfLoop);
 
@@ -193,9 +194,9 @@ public class DFATest {
 
             Set<State> emptyFinalStates = new HashSet<>();
 
-            Set<Transition> transitions = new HashSet<>();
-            transitions.add(new Transition(s0, new Symbol('a'), s1));
-            transitions.add(new Transition(s1, new Symbol('a'), s0));
+            Set<FSATransition> transitions = new HashSet<>();
+            transitions.add(new FSATransition(s0, new Symbol('a'), s1));
+            transitions.add(new FSATransition(s1, new Symbol('a'), s0));
 
             DFA noFinalDFA = new DFA(twoStates, simpleAlphabet, emptyFinalStates, s0, transitions);
 

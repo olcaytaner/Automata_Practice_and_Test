@@ -2,6 +2,7 @@ package NondeterministicFiniteAutomaton;
 
 import common.Automaton;
 import common.ExecutionResult;
+import common.FSATransition;
 import common.MachineType;
 import common.InputNormalizer;
 import common.ParseResult;
@@ -40,7 +41,7 @@ public class NFA extends Automaton {
     private Set<Symbol> alphabet;
     private State startState;
     private Set<State> finalStates;
-    private Map<State, List<Transition>> transitions;
+    private Map<State, List<FSATransition>> transitions;
 
     private static final boolean TIME = false;
     private static final boolean VERBOSE = false;
@@ -55,7 +56,7 @@ public class NFA extends Automaton {
      * @param finalStates  set of final states
      * @param transitions  map of states to their outgoing transitions
      */
-    public NFA(Map<String, State> states, Set<Symbol> alphabet, State startState, Set<State> finalStates, Map<State, List<Transition>> transitions) {
+    public NFA(Map<String, State> states, Set<Symbol> alphabet, State startState, Set<State> finalStates, Map<State, List<FSATransition>> transitions) {
         super(MachineType.NFA);
         this.states = states;
         this.alphabet = alphabet;
@@ -353,12 +354,12 @@ public class NFA extends Automaton {
 
             for (State state : currentStates) {
 
-                for (Transition t : this.transitions.getOrDefault(state, Collections.emptyList())) {
-                    if (t.getSymbol().equals(inputSymbol)) {
-                        nextStates.add(t.getTo());
+                for (FSATransition t : this.transitions.getOrDefault(state, Collections.emptyList())) {
+                    if (t.getInputSymbol().equals(inputSymbol)) {
+                        nextStates.add(t.getToState());
                         trace.append("Transition: ").append(state.getName())
                                 .append(" --").append(c).append("--> ")
-                                .append(t.getTo().getName()).append("\n");
+                                .append(t.getToState().getName()).append("\n");
                     }
                 }
 
@@ -406,11 +407,11 @@ public class NFA extends Automaton {
             State state = it.next();
             it.remove();
 
-            for (Transition t : this.transitions.getOrDefault(state, Collections.emptyList())) {
-                if (t.getSymbol().isEpsilon() && !visited.contains(t.getTo())) {
-                    visited.add(t.getFrom());
-                    queue.add(t.getTo());
-                    returnQueue.add(t.getTo());
+            for (FSATransition t : this.transitions.getOrDefault(state, Collections.emptyList())) {
+                if (t.getInputSymbol().isEpsilon() && !visited.contains(t.getToState())) {
+                    visited.add(t.getFromState());
+                    queue.add(t.getToState());
+                    returnQueue.add(t.getToState());
                 }
             }
 
@@ -502,8 +503,8 @@ public class NFA extends Automaton {
             if (fromStateName != null && this.states.get(fromStateName) != null) {
                 State fromState = this.states.get(fromStateName);
                 if (this.transitions.get(fromState) != null) {
-                    for (Transition t : this.transitions.get(fromState)) {
-                        if (t.getTo().getName().equals(toStateName)) {
+                    for (FSATransition t : this.transitions.get(fromState)) {
+                        if (t.getToState().getName().equals(toStateName)) {
                             alreadyExists = true;
                             break;
                         }
@@ -527,7 +528,7 @@ public class NFA extends Automaton {
 
                     String[] symbols = transitionName.substring(1, transitionName.length()-1).split("\\s");
 
-                    List<Transition> transitionList = new ArrayList<>();
+                    List<FSATransition> transitionList = new ArrayList<>();
                     for (String symbol : symbols) {
                         Symbol symbolTemp;
                         if (symbol.equals("eps")) {
@@ -540,7 +541,7 @@ public class NFA extends Automaton {
                                     lineNo, ValidationMessageType.ERROR));
                             continue;
                         }
-                        Transition transition = new Transition(fromState,toState,symbolTemp);
+                        FSATransition transition = new FSATransition(fromState, symbolTemp, toState);
                         if (!alreadyExists){
                             if (transitionList.contains(transition)) {
                                 warnings.add(new ValidationMessage("Duplicate transition symbol: " + symbolTemp.getValue(), lineNo, ValidationMessageType.ERROR));
@@ -704,8 +705,8 @@ public class NFA extends Automaton {
     private List<ValidationMessage> validateTransitions(){
         List<ValidationMessage> validationWarnings = new ArrayList<>();
 
-        Map<State, List<Transition>> transitions = this.transitions;
-        for (State fromState : transitions.keySet()){
+        Map<State, List<FSATransition>> transitionsMap = this.transitions;
+        for (State fromState : transitionsMap.keySet()){
             if (!states.containsKey(fromState.getName())){
                 validationWarnings.add(new ValidationMessage("States map does not contain the transition fromState: " + fromState.getName(), -1, ValidationMessageType.ERROR));
             }
@@ -713,16 +714,16 @@ public class NFA extends Automaton {
                 validationWarnings.add(new ValidationMessage("Transition fromState: " + fromState.getName() + " does not match valid state name", -1, ValidationMessageType.ERROR));
             }
 
-            if (transitions.get(fromState) != null) {
-                for (Transition t : transitions.get(fromState)){
-                    List<ValidationMessage> transitionSymbolWarnings = validateSymbol(t.getSymbol());
+            if (transitionsMap.get(fromState) != null) {
+                for (FSATransition t : transitionsMap.get(fromState)){
+                    List<ValidationMessage> transitionSymbolWarnings = validateSymbol(t.getInputSymbol());
                     validationWarnings.addAll(transitionSymbolWarnings);
 
-                    if (alphabet != null && !t.getSymbol().isEpsilon() && !alphabet.contains(t.getSymbol())){
-                        validationWarnings.add(new ValidationMessage("Alphabet does not contain transition symbol: " + t.getSymbol().getValue(), -1, ValidationMessageType.ERROR));
+                    if (alphabet != null && !t.getInputSymbol().isEpsilon() && !alphabet.contains(t.getInputSymbol())){
+                        validationWarnings.add(new ValidationMessage("Alphabet does not contain transition symbol: " + t.getInputSymbol().getValue(), -1, ValidationMessageType.ERROR));
                     }
 
-                    State toState = t.getTo();
+                    State toState = t.getToState();
                     if (!states.containsKey(toState.getName())){
                         validationWarnings.add(new ValidationMessage("States map does not contain the transition toState: " + toState.getName(), -1, ValidationMessageType.ERROR));
                     }
@@ -813,24 +814,24 @@ public class NFA extends Automaton {
             dot.append(String.format("  \"start\" -> \"%s\";\n", startState.getName()));
         }
 
-        List<Transition> addedTransitions = new ArrayList<>();
+        List<FSATransition> addedTransitions = new ArrayList<>();
 
-        for (List<Transition> transitions : transitions.values()) {
-            for (Transition t : transitions) {
+        for (List<FSATransition> transitionList : transitions.values()) {
+            for (FSATransition t : transitionList) {
                 if (!addedTransitions.contains(t)) {
 
-                    List<Transition> sameTransitionsFromState = getSameTransitionsFromState(t.getFrom(), t.getTo());
+                    List<FSATransition> sameTransitionsFromState = getSameTransitionsFromState(t.getFromState(), t.getToState());
 
                     List<String> symbols = new ArrayList<>();
                     boolean epsilonExists = false;
 
-                    for (Transition sameTransition : sameTransitionsFromState) {
+                    for (FSATransition sameTransition : sameTransitionsFromState) {
                             addedTransitions.add(sameTransition);
 
-                            if (sameTransition.getSymbol().isEpsilon()){
+                            if (sameTransition.getInputSymbol().isEpsilon()){
                                 epsilonExists = true;
                             }else {
-                                symbols.add(String.valueOf(sameTransition.getSymbol().getValue()));
+                                symbols.add(String.valueOf(sameTransition.getInputSymbol().getValue()));
                             }
                     }
 
@@ -838,12 +839,12 @@ public class NFA extends Automaton {
 
                     if (!label.isEmpty()){
                         dot.append(String.format("  \"%s\" -> \"%s\" [label=\"%s\"];\n",
-                                t.getFrom().getName(), t.getTo().getName(), label));
+                                t.getFromState().getName(), t.getToState().getName(), label));
                     }
 
                     if (epsilonExists){
                         dot.append(String.format("  \"%s\" -> \"%s\" [label=\"%s\", style=\"dashed\"];\n",
-                                t.getFrom().getName(), t.getTo().getName(), "ε"));
+                                t.getFromState().getName(), t.getToState().getName(), "ε"));
                     }
 
                 }
@@ -862,17 +863,17 @@ public class NFA extends Automaton {
      * @param toState the destination state
      * @return list of transitions between the given states
      */
-    private List<Transition> getSameTransitionsFromState(State fromState, State toState){
+    private List<FSATransition> getSameTransitionsFromState(State fromState, State toState){
 
-        List<Transition> transitions = new ArrayList<>();
+        List<FSATransition> transitionList = new ArrayList<>();
 
-        for (Transition t : this.transitions.get(fromState)){
-            if (t.getTo().equals(toState)){
-                transitions.add(t);
+        for (FSATransition t : this.transitions.get(fromState)){
+            if (t.getToState().equals(toState)){
+                transitionList.add(t);
             }
         }
 
-        return transitions;
+        return transitionList;
     }
 
     /**
@@ -903,8 +904,8 @@ public class NFA extends Automaton {
         }
 
         sb.append("Transitions:\n");
-        for (List<Transition> transitions : this.transitions.values()){
-            for (Transition transition : transitions){
+        for (List<FSATransition> transitionList : this.transitions.values()){
+            for (FSATransition transition : transitionList){
                 sb.append(transition.prettyPrint()).append("\n");
             }
         }
@@ -933,7 +934,7 @@ public class NFA extends Automaton {
         return finalStates;
     }
 
-    public Map<State, List<Transition>> getTransitions() {
+    public Map<State, List<FSATransition>> getTransitions() {
         return transitions;
     }
 

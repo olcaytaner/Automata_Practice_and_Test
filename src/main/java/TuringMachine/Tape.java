@@ -1,5 +1,6 @@
 package TuringMachine;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +54,7 @@ public class Tape {
      * Moves the tape head in the specified direction.
      * @param direction The direction to move the head.
      */
-    public void move(Direction direction) {
+    public void move(TMTransition.Direction direction) {
         switch (direction) {
             case LEFT:
                 if (headPosition > 0) {

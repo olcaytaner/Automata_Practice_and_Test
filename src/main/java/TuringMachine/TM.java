@@ -22,7 +22,7 @@ public class TM extends Automaton {
     private Set<State> states;
     private Alphabet inputAlphabet;
     private Alphabet tapeAlphabet;
-    private Map<ConfigurationKey, Transition> transitionFunction;
+    private Map<ConfigurationKey, TMTransition> transitionFunction;
     private State startState;
     private State acceptState;
     private State rejectState;
@@ -55,7 +55,7 @@ public class TM extends Automaton {
     public TM(Set<State> states,
                          Alphabet inputAlphabet,
                          Alphabet tapeAlphabet,
-                         Map<ConfigurationKey, Transition> transitionFunction,
+                         Map<ConfigurationKey, TMTransition> transitionFunction,
                          State startState,
                          State acceptState,
                          State rejectState) {
@@ -92,7 +92,7 @@ public class TM extends Automaton {
 
         transitionFunction.forEach((key, value) -> {
             dot.append("  \"").append(key.getState().getName()).append("\" -> \"").append(value.getNextState().getName()).append("\" [label = \"")
-               .append(key.getSymbolToRead()).append(" -> ").append(value.getSymbolToWrite()).append(", ").append(value.getMoveDirection() == Direction.LEFT ? "L" : "R").append("\"];\n");
+               .append(key.getSymbolToRead()).append(" -> ").append(value.getSymbolToWrite()).append(", ").append(value.getMoveDirection() == TMTransition.Direction.LEFT ? "L" : "R").append("\"];\n");
         });
 
         dot.append("}\n");
@@ -104,7 +104,7 @@ public class TM extends Automaton {
      */
     public void step() {
         Symbol currentSymbol = new Symbol(tape.read());
-        Transition transition = transitionFunction.get(new ConfigurationKey(currentState, currentSymbol.getValue()));
+        TMTransition transition = transitionFunction.get(new ConfigurationKey(currentState, currentSymbol.getValue()));
 
         if (transition == null) {
             currentState = rejectState;
@@ -113,7 +113,7 @@ public class TM extends Automaton {
 
         tape.write(transition.getSymbolToWrite());
         tape.move(transition.getMoveDirection());
-        currentState = transition.getNextState();
+        currentState = (State) transition.getNextState();
     }
 
     /**

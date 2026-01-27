@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import common.Automaton;
 import common.ExecutionResult;
+import common.FSATransition;
 import common.InputNormalizer;
 import common.MachineType;
 import common.ParseResult;
@@ -32,7 +33,7 @@ import common.ValidationMessage;
 public class DFA extends Automaton {
   private Set<State> states;
   private Set<Symbol> alphabet;
-  private Set<Transition> transitions;
+  private Set<FSATransition> transitions;
 
   private State startState;
   private Set<State> finalStates;
@@ -60,8 +61,8 @@ public class DFA extends Automaton {
   public DFA(Set<State> states,
             Set<Symbol> alphabet,
             Set<State> finalStates,
-            State startState, 
-            Set<Transition> transitions) {
+            State startState,
+            Set<FSATransition> transitions) {
     super(MachineType.DFA);
     this.states = states;
     this.alphabet = alphabet;
@@ -93,7 +94,7 @@ public class DFA extends Automaton {
    *
    * @return An unmodifiable set of all transitions
    */
-  public Set<Transition> getTransitions() {
+  public Set<FSATransition> getTransitions() {
     return Collections.unmodifiableSet(transitions);
   }
 
@@ -222,23 +223,23 @@ public class DFA extends Automaton {
       }
       
       // Find transition
-      Transition validTransition = null;
-      for (Transition transition : transitions) {
-        if (transition.getFrom().getName().equals(currentState.getName()) && 
-            transition.getSymbol().equals(inputSymbol)) {
+      FSATransition validTransition = null;
+      for (FSATransition transition : transitions) {
+        if (transition.getFromState().getName().equals(currentState.getName()) &&
+            transition.getInputSymbol().equals(inputSymbol)) {
           validTransition = transition;
           break;
         }
       }
-      
+
       if (validTransition == null) {
         trace.append("No transition from state ").append(currentState.getName())
               .append(" on symbol '").append(inputChar).append("'\n");
         runtimeMessages.add(new ValidationMessage("No transition defined", i, ValidationMessage.ValidationMessageType.ERROR));
         return new ExecutionResult(false, runtimeMessages, trace.toString());
       }
-      
-      currentState = validTransition.getTo();
+
+      currentState = validTransition.getToState();
       trace.append("Read '").append(inputChar).append("' -> state ").append(currentState.getName()).append("\n");
     }
     
@@ -293,15 +294,15 @@ public class DFA extends Automaton {
   /**
    * Checks if all states have transitions for every symbol in the alphabet.
    * Adds error messages for any missing transitions.
-   * 
+   *
    * @param states All states in the DFA
    * @param alphabet The alphabet of the DFA
    * @param transitions The set of transitions
    * @param messages List to collect validation messages
    */
-  private void checkMissingTransitions(Set<State> states, 
+  private void checkMissingTransitions(Set<State> states,
                                      Set<Symbol> alphabet,
-                                     Set<Transition> transitions,
+                                     Set<FSATransition> transitions,
                                      List<ValidationMessage> messages) {
     if (states == null || alphabet == null || transitions == null) {
       return;
@@ -309,15 +310,15 @@ public class DFA extends Automaton {
 
     // Create a map of state -> symbol -> target state
     Map<State, Map<Symbol, State>> transitionMap = new HashMap<>();
-    
+
     // Initialize the transition map
     for (State state : states) {
       transitionMap.put(state, new HashMap<>());
     }
-    
+
     // Populate the transition map with existing transitions
-    for (Transition t : transitions) {
-      transitionMap.get(t.getFrom()).put(t.getSymbol(), t.getTo());
+    for (FSATransition t : transitions) {
+      transitionMap.get(t.getFromState()).put(t.getInputSymbol(), t.getToState());
     }
     
     // Check for missing transitions
@@ -452,12 +453,12 @@ public class DFA extends Automaton {
    * @param startLine The line number where the transitions section starts
    * @param stateMap Map of state names to State objects
    * @param messages List to collect any validation messages
-   * @return A set of Transition objects representing the DFA's transitions
+   * @return A set of FSATransition objects representing the DFA's transitions
    */
-  private Set<Transition> processTransitions(List<String> lines, int startLine,
+  private Set<FSATransition> processTransitions(List<String> lines, int startLine,
                                              Map<String, State> stateMap,
                                              List<ValidationMessage> messages) {
-    Set<Transition> transitionSet = new HashSet<>();
+    Set<FSATransition> transitionSet = new HashSet<>();
     if (lines == null) return transitionSet;
 
     // Map to track transitions by fromState and symbol
@@ -512,7 +513,7 @@ public class DFA extends Automaton {
           transitionMap.computeIfAbsent(from, k -> new HashMap<>()).put(sym, to);
 
           // Add to the final transition set
-          transitionSet.add(new Transition(from, sym, to));
+          transitionSet.add(new FSATransition(from, sym, to));
         }
       } else {
         messages.add(new ValidationMessage("Invalid transition format.", currentLine, ValidationMessage.ValidationMessageType.ERROR));
@@ -576,9 +577,9 @@ public class DFA extends Automaton {
    * @param transitions Set of transitions in the DFA
    * @param messages List to collect validation messages
    */
-  private void checkForUnreachableStates(Set<State> allStates, 
+  private void checkForUnreachableStates(Set<State> allStates,
                                        State startState,
-                                       Set<Transition> transitions,
+                                       Set<FSATransition> transitions,
                                        List<ValidationMessage> messages) {
     if (startState == null || allStates.isEmpty()) return;
 
@@ -589,8 +590,8 @@ public class DFA extends Automaton {
     queue.add(startState);
 
     Map<State, Set<State>> transitionMap = new HashMap<>();
-    for (Transition t : transitions) {
-      transitionMap.computeIfAbsent(t.getFrom(), k -> new HashSet<>()).add(t.getTo());
+    for (FSATransition t : transitions) {
+      transitionMap.computeIfAbsent(t.getFromState(), k -> new HashSet<>()).add(t.getToState());
     }
 
     while (!queue.isEmpty()) {
@@ -625,11 +626,11 @@ public class DFA extends Automaton {
    */
   private void checkForDeadEndStates(Set<State> allStates,
                                    Set<State> finalStates,
-                                   Set<Transition> transitions,
+                                   Set<FSATransition> transitions,
                                    List<ValidationMessage> messages) {
 
     Set<State> statesWithOutgoing = transitions.stream()
-        .map(Transition::getFrom)
+        .map(FSATransition::getFromState)
         .collect(Collectors.toSet());
 
     for (State state : allStates) {
@@ -653,8 +654,8 @@ public class DFA extends Automaton {
     // Check if any state is missing a transition for any symbol
     for (State state : states) {
       Set<Symbol> symbolsForState = transitions.stream()
-        .filter(t -> t.getFrom().equals(state))
-        .map(Transition::getSymbol)
+        .filter(t -> t.getFromState().equals(state))
+        .map(FSATransition::getInputSymbol)
         .collect(Collectors.toSet());
 
       if (!symbolsForState.containsAll(alphabet)) {
@@ -711,11 +712,11 @@ public class DFA extends Automaton {
 
     // Group transitions by from-state and symbol to create a single edge with multiple labels
     Map<State, Map<State, Set<Symbol>>> transitionMap = new HashMap<>();
-    for (Transition t : transitions) {
+    for (FSATransition t : transitions) {
       transitionMap
-        .computeIfAbsent(t.getFrom(), k -> new HashMap<>())
-        .computeIfAbsent(t.getTo(), k -> new TreeSet<>(Comparator.comparing(Symbol::toString)))
-        .add(t.getSymbol());
+        .computeIfAbsent(t.getFromState(), k -> new HashMap<>())
+        .computeIfAbsent(t.getToState(), k -> new TreeSet<>(Comparator.comparing(Symbol::toString)))
+        .add(t.getInputSymbol());
     }
 
     // Add edges
