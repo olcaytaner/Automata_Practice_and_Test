@@ -25,6 +25,8 @@ import common.State;
 import common.Symbol;
 import common.ValidationMessage;
 
+import static common.SymbolConstants.*;
+
 /**
  * Represents a Deterministic Finite Automaton (DFA).
  * This class provides functionality to parse, validate, and execute DFAs,
@@ -542,8 +544,8 @@ public class DFA extends Automaton {
       messages.add(new ValidationMessage("State '" + name + "' is not defined in 'states'.", line, ValidationMessage.ValidationMessageType.ERROR));
     }
 
-    if (name.equalsIgnoreCase("eps")) {
-      messages.add(new ValidationMessage("The state name 'eps' is reserved and cannot be used.", line, ValidationMessage.ValidationMessageType.ERROR));
+    if (isEpsilonInput(name)) {
+      messages.add(new ValidationMessage("The state name '" + EPSILON_INPUT + "' is reserved and cannot be used.", line, ValidationMessage.ValidationMessageType.ERROR));
     }
 
     return state;

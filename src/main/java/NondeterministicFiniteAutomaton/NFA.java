@@ -10,6 +10,9 @@ import common.State;
 import common.Symbol;
 import common.ValidationMessage;
 import common.ValidationMessage.ValidationMessageType;
+
+import static common.SymbolConstants.*;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -531,12 +534,12 @@ public class NFA extends Automaton {
                     List<FSATransition> transitionList = new ArrayList<>();
                     for (String symbol : symbols) {
                         Symbol symbolTemp;
-                        if (symbol.equals("eps")) {
-                            symbolTemp = new Symbol('_');
+                        if (isEpsilonInput(symbol)) {
+                            symbolTemp = new Symbol(EPSILON_CHAR);
                         }else{
                             symbolTemp = new Symbol(symbol.charAt(0));
                         }
-                        if (!this.alphabet.contains(symbolTemp) && !symbol.equals("eps")) {
+                        if (!this.alphabet.contains(symbolTemp) && !isEpsilonInput(symbol)) {
                             warnings.add(new ValidationMessage("Alphabet does not contain transition symbol: " + symbol,
                                     lineNo, ValidationMessageType.ERROR));
                             continue;

@@ -2,6 +2,8 @@ package ContextFreeGrammar;
 
 import common.Symbol;
 
+import static common.SymbolConstants.*;
+
 /**
  * Represents a terminal symbol in a context-free grammar.
  * Terminal symbols are the basic symbols from which strings are formed.
@@ -21,12 +23,12 @@ public class Terminal extends Symbol {
 
     @Override
     public boolean isEpsilon() {
-        return name.equals("eps") || getValue() == 'e';
+        return isEpsilonInput(name);
     }
 
     @Override
     public String prettyPrint() {
-        return "Terminal: " + (isEpsilon() ? "eps" : name);
+        return "Terminal: " + (isEpsilon() ? EPSILON_INPUT : name);
     }
 
     @Override
@@ -49,6 +51,6 @@ public class Terminal extends Symbol {
 
     @Override
     public String toString() {
-        return isEpsilon() ? "eps" : name;
+        return isEpsilon() ? EPSILON_INPUT : name;
     }
 }

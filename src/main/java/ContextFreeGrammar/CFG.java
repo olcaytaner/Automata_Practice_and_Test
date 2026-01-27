@@ -22,6 +22,8 @@ import common.ParseResult;
 import common.Symbol;
 import common.ValidationMessage;
 
+import static common.SymbolConstants.*;
+
 /**
  * Represents a Context-Free Grammar (CFG) with variables, terminals, productions, and a start symbol.
  * This class provides functionality to validate the grammar, manipulate productions, format output,
@@ -353,7 +355,7 @@ public class CFG extends Automaton {
         for (String alternative : alternatives) {
             alternative = alternative.trim();
 
-            if (alternative.equals("eps")) {
+            if (isEpsilonInput(alternative)) {
                 productions.add(new Production(left, Collections.emptyList()));
                 continue;
             }
@@ -362,7 +364,7 @@ public class CFG extends Automaton {
             if (!alternative.isEmpty()) {
                 String[] symbols = alternative.split("\\s+");
                 for (String symbol : symbols) {
-                    if (symbol.equals("eps")) {
+                    if (isEpsilonInput(symbol)) {
                         throw new GrammarParseException("Epsilon 'eps' must appear alone on the right-hand side");
                     }
                     Symbol s = findSymbol(symbol, variables, terminals);
@@ -923,7 +925,7 @@ public class CFG extends Automaton {
             for (Symbol symbol : p.getRight()) {
                 if (symbol instanceof NonTerminal && !varNames.contains(symbol.getName())) {
                     messages.add(new ValidationMessage("Production uses undefined variable: " + symbol.getName(), 0, ValidationMessage.ValidationMessageType.ERROR));
-                } else if (symbol instanceof Terminal && !termNames.contains(symbol.getName()) && !symbol.getName().equals("eps")) {
+                } else if (symbol instanceof Terminal && !termNames.contains(symbol.getName()) && !isEpsilonInput(symbol.getName())) {
                     messages.add(new ValidationMessage("Production uses undefined terminal: " + symbol.getName(), 0, ValidationMessage.ValidationMessageType.WARNING));
                 }
             }
@@ -1044,7 +1046,7 @@ public class CFG extends Automaton {
                             symbol.getName());
                     return false;
                 } else if (symbol instanceof Terminal &&
-                        !termNames.contains(symbol.getName()) && !symbol.getName().equals("eps")) {
+                        !termNames.contains(symbol.getName()) && !isEpsilonInput(symbol.getName())) {
                     System.err.println("Error: Production uses undefined terminal: " +
                             symbol.getName());
                     return false;
@@ -1134,7 +1136,7 @@ public class CFG extends Automaton {
                             .map(Symbol::getName)
                             .collect(Collectors.joining(" "));
 
-                    sb.append(rightSide.isEmpty() ? "eps" : rightSide);
+                    sb.append(rightSide.isEmpty() ? EPSILON_INPUT : rightSide);
                 }
 
                 System.out.println(sb);

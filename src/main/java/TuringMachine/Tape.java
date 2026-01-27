@@ -1,5 +1,6 @@
 package TuringMachine;
 
+import static common.SymbolConstants.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +11,6 @@ import java.util.List;
 public class Tape {
     private final List<Character> tape;
     private int headPosition;
-    private static final char BLANK = '_';
 
     /**
      * Constructs a new empty tape.
@@ -71,7 +71,7 @@ public class Tape {
 
     private void ensureWithinBounds() {
         if (headPosition >= tape.size()) {
-            tape.add(BLANK);
+            tape.add(BLANK_CHAR);
         }
     }
 

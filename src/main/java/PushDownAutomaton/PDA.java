@@ -10,6 +10,8 @@ import common.Symbol;
 import common.ValidationMessage;
 import common.ValidationMessage.ValidationMessageType;
 
+import static common.SymbolConstants.*;
+
 import java.util.*;
 
 /**
@@ -218,7 +220,7 @@ public class PDA extends Automaton {
                 }
 
                 String push = t.getStackPush();
-                if (!"eps".equals(push)) {
+                if (!isEpsilonInput(push)) {
                     // push sequence to left (top at index 0)
                     newStack = push + newStack;
                 }
@@ -285,7 +287,7 @@ public class PDA extends Automaton {
     }
 
     private static String symToStr(Symbol s) {
-        return (s == null || s.isEpsilon()) ? "eps" : Character.toString(s.getValue());
+        return (s == null || s.isEpsilon()) ? EPSILON_INPUT : Character.toString(s.getValue());
     }
 
     /** Reconstruct a human-readable transition trace from parents map. */
@@ -355,8 +357,8 @@ public class PDA extends Automaton {
 
             for (int i = 0; i < group.size(); i++) {
                 PDATransition t = group.get(i);
-                String input = t.getInputSymbol().isEpsilon() ? "eps" : t.getInputSymbol().toString();
-                String pop = t.getStackPop().isEpsilon() ? "eps" : t.getStackPop().toString();
+                String input = t.getInputSymbol().isEpsilon() ? EPSILON_INPUT : t.getInputSymbol().toString();
+                String pop = t.getStackPop().isEpsilon() ? EPSILON_INPUT : t.getStackPop().toString();
                 String label = String.format("%s, %s / %s", input, pop, t.getStackPush());
 
                 if (isSelfLoop) {
@@ -458,12 +460,12 @@ public class PDA extends Automaton {
                                            Set<Symbol> stackAlphabet, List<ValidationMessage> messages) {
         if (lines == null || lines.isEmpty()) {
             // Allow missing stack_start: stack begins empty (epsilon)
-            return new Symbol('_');
+            return new Symbol(EPSILON_CHAR);
         }
         String stackStartStr = lines.get(0).trim();
-        if ("eps".equals(stackStartStr)) {
+        if (isEpsilonInput(stackStartStr)) {
             // Explicit epsilon → stack begins empty
-            return new Symbol('_');
+            return new Symbol(EPSILON_CHAR);
         }
         if (stackStartStr.length() != 1) {
             messages.add(new ValidationMessage("Stack start symbol must be a single character.", lineNum, ValidationMessageType.ERROR));
@@ -553,7 +555,7 @@ public class PDA extends Automaton {
     }
 
     private Symbol validateInputSymbol(String s, Set<Symbol> alphabet, int line, List<ValidationMessage> messages) {
-        if (s.equals("eps")) return new Symbol('_');
+        if (isEpsilonInput(s)) return new Symbol(EPSILON_CHAR);
         if (s.length() != 1) {
             messages.add(new ValidationMessage("Input symbol '" + s + "' must be a single character or 'eps'.", line, ValidationMessageType.ERROR));
             return null;
@@ -567,7 +569,7 @@ public class PDA extends Automaton {
     }
 
     private Symbol validateStackSymbol(String s, Set<Symbol> alphabet, int line, List<ValidationMessage> messages) {
-        if (s.equals("eps")) return new Symbol('_');
+        if (isEpsilonInput(s)) return new Symbol(EPSILON_CHAR);
         if (s.length() != 1) {
             messages.add(new ValidationMessage("Stack symbol '" + s + "' must be a single character or 'eps'.", line, ValidationMessageType.ERROR));
             return null;
@@ -581,7 +583,7 @@ public class PDA extends Automaton {
     }
 
     private boolean validatePushString(String pushString, Set<Symbol> alphabet, int line, List<ValidationMessage> messages) {
-        if (!"eps".equals(pushString)) {
+        if (!isEpsilonInput(pushString)) {
             if (pushString.length() != 1) {
                 messages.add(new ValidationMessage(
                         "Stack push '" + pushString + "' must be a single character or 'eps'.",

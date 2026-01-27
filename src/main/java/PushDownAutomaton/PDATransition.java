@@ -4,6 +4,8 @@ import common.BaseTransition;
 import common.State;
 import common.Symbol;
 
+import static common.SymbolConstants.*;
+
 import java.util.Objects;
 
 /**
@@ -113,14 +115,14 @@ public class PDATransition extends BaseTransition {
      * @return true if this transition pushes symbols
      */
     public boolean pushesToStack() {
-        return stackPush != null && !stackPush.isEmpty() && !stackPush.equals("_");
+        return stackPush != null && !stackPush.isEmpty() && !isEpsilonInput(stackPush);
     }
 
     @Override
     protected String getLabel() {
-        String input = inputSymbol.isEpsilon() ? "ε" : inputSymbol.toString();
-        String pop = stackPop.isEpsilon() ? "ε" : stackPop.toString();
-        String push = (stackPush == null || stackPush.isEmpty() || stackPush.equals("_")) ? "ε" : stackPush;
+        String input = inputSymbol.isEpsilon() ? EPSILON_DISPLAY : inputSymbol.toString();
+        String pop = stackPop.isEpsilon() ? EPSILON_DISPLAY : stackPop.toString();
+        String push = isNoPush(stackPush) ? EPSILON_DISPLAY : stackPush;
         return String.format("%s, %s/%s", input, pop, push);
     }
 

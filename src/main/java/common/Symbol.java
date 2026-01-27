@@ -1,5 +1,7 @@
 package common;
 
+import static common.SymbolConstants.*;
+
 import java.util.Objects;
 
 /**
@@ -42,21 +44,21 @@ public class Symbol {
   /**
    * Checks if this symbol represents the epsilon (empty string) symbol.
    * Epsilon is represented internally by the underscore character '_'.
-   * 
+   *
    * @return {@code true} if this symbol is epsilon, {@code false} otherwise
    */
-  public boolean isEpsilon() { return value == '_'; }
+  public boolean isEpsilon() { return value == EPSILON_CHAR; }
 
 
   /**
    * Returns a human-readable string representation of this symbol.
    * For epsilon symbols, returns "Symbol: eps". For all other symbols,
    * returns "Symbol: " followed by the character value.
-   * 
+   *
    * @return a formatted string representation of this symbol
    */
   public String prettyPrint() {
-    return "Symbol: " + (isEpsilon() ? "eps" : value);
+    return "Symbol: " + (isEpsilon() ? EPSILON_INPUT : value);
   }
 
   /**

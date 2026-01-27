@@ -8,6 +8,7 @@ import java.util.Map;
 import static RegularExpression.RegexOperator.CONCAT;
 import static RegularExpression.RegexOperator.OR;
 import static RegularExpression.RegexOperator.STAR;
+import static common.SymbolConstants.*;
 
 /**
  * Internal syntax tree representation for regular expressions.
@@ -50,7 +51,7 @@ class RegexSyntaxTree {
      */
     String sanitize(String regex) {
         regex = regex.replaceAll("\\s+", ""); // delete whitespace from input
-        regex = regex.replace("eps", "ε"); // This will make things much easier
+        regex = regex.replace(EPSILON_INPUT, EPSILON_DISPLAY); // This will make things much easier
         StringBuilder sanitized = new StringBuilder();
         int parenthesisCount = 0;
         for (char c : regex.toCharArray()) {
@@ -155,7 +156,7 @@ class RegexSyntaxTree {
      * Utility method to check whether the alphabet has a certain char.
      */
     boolean alphabetHas(char c) {
-        if (c == 'ε')
+        if (c == EPSILON_DISPLAY.charAt(0))
             return true;
         for (char ch : alphabet)
             if (ch == c)
