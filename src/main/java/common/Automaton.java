@@ -30,7 +30,7 @@ public abstract class Automaton implements Visualizable {
   }
 
   public String getFileExtension() {
-    return type != null ? type.getExtension() : ".undefined";
+    return type != null ? type.getExtension() : ".txt";
   }
 
   @Override

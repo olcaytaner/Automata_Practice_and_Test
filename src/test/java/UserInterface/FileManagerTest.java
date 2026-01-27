@@ -23,7 +23,6 @@ import PushDownAutomaton.PDA;
 import TuringMachine.TM;
 import common.Automaton;
 import common.ExecutionResult;
-import common.MachineType;
 import common.ParseResult;
 import common.ValidationMessage;
 
@@ -95,7 +94,7 @@ public class FileManagerTest {
         @DisplayName("Unknown automaton should return .txt extension")
         void testUnknownExtension() {
             // Create a mock automaton that doesn't match any known types
-            Automaton unknown = new Automaton(MachineType.DFA) {
+            Automaton unknown = new Automaton(null) {
                 @Override
                 public ParseResult parse(String inputText) { return null; }
                 @Override
