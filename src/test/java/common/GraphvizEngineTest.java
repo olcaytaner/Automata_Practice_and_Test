@@ -1,7 +1,5 @@
 package common;
 
-import javax.swing.JLabel;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -12,17 +10,24 @@ import org.junit.jupiter.api.Test;
 
 import DeterministicFiniteAutomaton.DFA;
 import NondeterministicFiniteAutomaton.NFA;
+import service.VisualizationService;
 
 /**
  * Tests GraphViz rendering across different Java versions.
  * This test verifies that the GraphvizJdkEngine (GraalVM) works
  * correctly on Java 8, 11, 17, 21, and 24.
+ *
+ * Uses VisualizationService (service layer) for rendering as per MVC architecture.
  */
 @DisplayName("GraphViz Multi-Version Compatibility Tests")
 class GraphvizEngineTest {
 
-    @BeforeAll
-    static void printJavaInfo() {
+    private static VisualizationService visualizationService;
+
+    @BeforeAll  
+    static void setup() {
+        visualizationService = new VisualizationService();
+
         String separator = generateSeparator(60);
         System.out.println("\n" + separator);
         System.out.println("JAVA ENVIRONMENT INFO");
@@ -74,14 +79,14 @@ class GraphvizEngineTest {
                         .count(),
                 "Should have no parse errors");
 
-        // Test GraphViz rendering - now returns SVG text in JLabel
-        JLabel result = dfa.toGraphviz(dfaInput);
-        assertNotNull(result, "GraphViz should return a JLabel");
-        assertNotNull(result.getText(), "JLabel should contain SVG text");
-        assertFalse(result.getText().isEmpty(), "SVG text should not be empty");
+        // Test GraphViz rendering using VisualizationService (MVC-compliant)
+        VisualizationService.VisualizationResult result = visualizationService.generateVisualization(dfa, dfaInput);
+        assertTrue(result.isSuccess(), "Visualization should succeed");
+        assertNotNull(result.getSvgContent(), "Should have SVG content");
+        assertFalse(result.getSvgContent().isEmpty(), "SVG content should not be empty");
 
         // Verify it's valid SVG content
-        String svgText = result.getText();
+        String svgText = result.getSvgContent();
         assertTrue(svgText.contains("<svg") || svgText.contains("<?xml"),
                 "Text should contain SVG markup");
         assertTrue(svgText.contains("</svg>"), "SVG should be properly closed");
@@ -111,14 +116,14 @@ class GraphvizEngineTest {
         assertTrue(parseResult.isSuccess(),
                 "NFA parsing should succeed");
 
-        // Test GraphViz rendering - now returns SVG text in JLabel
-        JLabel result = nfa.toGraphviz(nfaInput);
-        assertNotNull(result, "GraphViz should return a JLabel");
-        assertNotNull(result.getText(), "JLabel should contain SVG text");
-        assertFalse(result.getText().isEmpty(), "SVG text should not be empty");
+        // Test GraphViz rendering using VisualizationService (MVC-compliant)
+        VisualizationService.VisualizationResult result = visualizationService.generateVisualization(nfa, nfaInput);
+        assertTrue(result.isSuccess(), "Visualization should succeed");
+        assertNotNull(result.getSvgContent(), "Should have SVG content");
+        assertFalse(result.getSvgContent().isEmpty(), "SVG content should not be empty");
 
         // Verify it's valid SVG content
-        String svgText = result.getText();
+        String svgText = result.getSvgContent();
         assertTrue(svgText.contains("<svg") || svgText.contains("<?xml"),
                 "Text should contain SVG markup");
         assertTrue(svgText.contains("</svg>"), "SVG should be properly closed");
@@ -139,10 +144,11 @@ class GraphvizEngineTest {
         assertFalse(parseResult.isSuccess(),
                 "Invalid input should fail parsing");
 
-        // GraphViz should still return a label (with error message)
-        JLabel result = dfa.toGraphviz(invalidInput);
-        assertNotNull(result, "Should return error label");
+        // VisualizationService should return failure result for invalid input
+        VisualizationService.VisualizationResult result = visualizationService.generateVisualization(dfa, invalidInput);
+        assertFalse(result.isSuccess(), "Visualization should fail for invalid input");
+        assertNotNull(result.getErrorMessage(), "Should have error message");
 
-        System.out.println("Error case handled correctly");
+        System.out.println("Error case handled correctly: " + result.getErrorMessage());
     }
 }

@@ -23,13 +23,9 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSplitPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import ContextFreeGrammar.CFG;
-import DeterministicFiniteAutomaton.DFA;
-import NondeterministicFiniteAutomaton.NFA;
-import PushDownAutomaton.PDA;
-import RegularExpression.RegularExpression;
-import TuringMachine.TM;
 import common.Automaton;
+import common.MachineType;
+import controller.AutomatonController;
 
 public class MainPanel extends JPanel {
     public JPanel recentFilesPanel;
@@ -45,19 +41,18 @@ public class MainPanel extends JPanel {
     private JPanel tabButtonsPanel;
     
     // Split pane for resizable sidebar
-    private JSplitPane mainSplitPane; 
-    
-    // Preferences manager for persistent storage
-    private static PreferencesManager preferencesManager = new PreferencesManager();
+    private JSplitPane mainSplitPane;
 
-    // Initialize TestSettings with the preferences manager on class load
-    static {
-        TestSettings.setPreferencesManager(preferencesManager);
-    }
+    // Controller for delegating business logic
+    private final AutomatonController controller;
 
     public class FileManager {
+        /**
+         * Gets the file extension for an automaton.
+         * Delegates to FileService for consistency.
+         */
         public String getExtensionForAutomaton(Automaton automaton) {
-            return automaton.getFileExtension();
+            return controller.getFileService().getExtensionForAutomaton(automaton);
         }
 
         public Color getColorForExtension(String extension) {
@@ -76,51 +71,51 @@ public class MainPanel extends JPanel {
             }
         }
         
-       
+        /**
+         * Creates a panel for the given file using the controller.
+         */
         public JPanel createPanelForFile(File file) throws Exception {
-            String content = new String(java.nio.file.Files.readAllBytes(file.toPath()));
-            String extension = getFileExtension(file);
-            Automaton automaton = null;
-            JPanel panel = null;
+            // Use controller to load file and get automaton
+            AutomatonController.LoadResult loadResult = controller.loadFromFile(file);
+            if (!loadResult.isSuccess()) {
+                throw new IllegalArgumentException(loadResult.getErrorMessage());
+            }
 
-            switch(extension) {
-                case ".nfa":
-                    automaton = new NFA();
-                    automaton.setInputText(content);
+            Automaton automaton = loadResult.getAutomaton();
+            String content = loadResult.getContent();
+            automaton.setInputText(content);
+
+            // Create the appropriate panel based on machine type
+            JPanel panel = null;
+            MachineType type = automaton.getMachineType();
+
+            switch (type) {
+                case NFA:
                     panel = new NFAPanel(MainPanel.this, automaton);
-                    ((NFAPanel)panel).loadFile(file);
+                    ((NFAPanel) panel).loadFile(file);
                     break;
-                case ".pda":
-                    automaton = new PDA();
-                    automaton.setInputText(content);
+                case PDA:
                     panel = new PDAPanel(MainPanel.this, automaton);
-                    ((PDAPanel)panel).loadFile(file);
+                    ((PDAPanel) panel).loadFile(file);
                     break;
-                case ".dfa":
-                    automaton = new DFA();
-                    automaton.setInputText(content);
+                case DFA:
                     panel = new DFAPanel(MainPanel.this, automaton);
-                    ((DFAPanel)panel).loadFile(file);
+                    ((DFAPanel) panel).loadFile(file);
                     break;
-                case ".tm":
-                    automaton = new TM();
-                    automaton.setInputText(content);
+                case TM:
                     panel = new TMPanel(MainPanel.this, automaton);
-                    ((TMPanel)panel).loadFile(file);
+                    ((TMPanel) panel).loadFile(file);
                     break;
-                case ".cfg":
-                    automaton = new CFG();
-                    automaton.setInputText(content);
+                case CFG:
                     panel = new CFGPanel(MainPanel.this, automaton);
-                    ((CFGPanel)panel).loadFile(file);
+                    ((CFGPanel) panel).loadFile(file);
                     break;
-                case ".rex":
-                    automaton = new RegularExpression();
+                case REGEX:
                     panel = new REXPanel(MainPanel.this, automaton);
-                    ((REXPanel)panel).loadFile(file);
+                    ((REXPanel) panel).loadFile(file);
                     break;
                 default:
-                    throw new IllegalArgumentException("Unsupported file type: " + extension);
+                    throw new IllegalArgumentException("Unsupported machine type: " + type);
             }
 
             return panel;
@@ -130,7 +125,7 @@ public class MainPanel extends JPanel {
          * Adds a file to recent files if not already present
          */
         public void addToRecentFiles(File file) {
-            preferencesManager.addRecentFile(file.getAbsolutePath());
+            controller.addRecentFile(file.getAbsolutePath());
             refreshRecentFilesList();
             if (parentFrame != null) {
                 parentFrame.updateRecentFilesMenu();
@@ -138,20 +133,26 @@ public class MainPanel extends JPanel {
         }
         
         /**
-         * Opens a file and displays it in the object panel
+         * Opens a file and displays it in the object panel.
+         * Note: createPanelForFile uses controller which handles adding to recent files.
          */
         public void openFile(File file) {
             try {
                 JPanel panel = createPanelForFile(file);
-                addToRecentFiles(file);
-                
+
+                // Refresh recent files UI (controller already added the file)
+                refreshRecentFilesList();
+                if (parentFrame != null) {
+                    parentFrame.updateRecentFilesMenu();
+                }
+
                 // Create a new tab for this file
                 if (panel instanceof AutomatonPanel) {
                     String tabTitle = file.getName();
                     AutomatonTab newTab = new AutomatonTab(tabTitle, (AutomatonPanel) panel, file);
                     addTab(newTab);
                 }
-                
+
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(MainPanel.this,
@@ -162,48 +163,50 @@ public class MainPanel extends JPanel {
         }
         
         /**
-         * Shows file chooser to select and open a file
+         * Shows file chooser to select and open a file.
+         * Uses controller for last directory management.
          */
         public void showOpenDialog() {
             JFileChooser fileChooser = new JFileChooser();
-            
+
             // Set the current directory to the last used directory if available
-            File lastDir = MainPanel.preferencesManager.getLastDirectoryAsFile();
+            File lastDir = controller.getLastDirectory();
             if (lastDir != null) {
                 fileChooser.setCurrentDirectory(lastDir);
             }
-            
+
             FileNameExtensionFilter filter = new FileNameExtensionFilter("Automaton Files", "nfa", "pda", "tm", "dfa", "rex", "cfg", "txt");
             fileChooser.setFileFilter(filter);
-            
+
             int option = fileChooser.showOpenDialog(MainPanel.this);
             if (option == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 // Remember the directory for next time
-                MainPanel.preferencesManager.setLastDirectory(file.getParent());
+                controller.setLastDirectory(file.getParentFile());
                 openFile(file);
             }
         }
         
         /**
-         * Shows save dialog and returns the selected file with proper extension
+         * Shows save dialog and returns the selected file with proper extension.
+         * Uses controller for last directory management.
          */
         public File showSaveDialog(Automaton automaton, String currentFileName) {
             JFileChooser fileChooser = new JFileChooser();
-            
+
             // Set the current directory to the last used directory if available
-            File lastDir = MainPanel.preferencesManager.getLastDirectoryAsFile();
+            File lastDir = controller.getLastDirectory();
             if (lastDir != null) {
                 fileChooser.setCurrentDirectory(lastDir);
             }
             String extension = getExtensionForAutomaton(automaton);
             String filterName = extension.substring(1).toUpperCase() + " Files (*" + extension + ")";
             fileChooser.setFileFilter(new FileNameExtensionFilter(filterName, extension.substring(1)));
-            
+
             if (currentFileName != null) {
                 fileChooser.setSelectedFile(new File(currentFileName));
             }
-            
+
             int option = fileChooser.showSaveDialog(MainPanel.this);
             if (option == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
@@ -211,16 +214,18 @@ public class MainPanel extends JPanel {
                     file = new File(file.toString() + extension);
                 }
                 // Remember the directory for next time
-                MainPanel.preferencesManager.setLastDirectory(file.getParent());
+                controller.setLastDirectory(file.getParentFile());
                 return file;
             }
             return null;
         }
         
+        /**
+         * Gets the file extension from a file.
+         * Delegates to FileService for consistency.
+         */
         private String getFileExtension(File file) {
-            String name = file.getName();
-            int lastDot = name.lastIndexOf(".");
-            return lastDot > 0 ? name.substring(lastDot) : "";
+            return controller.getFileService().getFileExtension(file);
         }
     }
     
@@ -243,7 +248,7 @@ public class MainPanel extends JPanel {
         JPopupMenu contextMenu = new JPopupMenu();
         JMenuItem removeItem = new JMenuItem("Remove from Recent Files");
         removeItem.addActionListener(e -> {
-            preferencesManager.removeRecentFile(file.getAbsolutePath());
+            controller.removeRecentFile(file.getAbsolutePath());
             refreshRecentFilesList();
             if (parentFrame != null) {
                 parentFrame.updateRecentFilesMenu();
@@ -266,22 +271,22 @@ public class MainPanel extends JPanel {
     }
     
     /**
-     * Loads recent files from PreferencesManager and creates buttons for them
+     * Loads recent files from controller and creates buttons for them.
      */
     private void loadRecentFilesButtons() {
-        for(String filePath : preferencesManager.getRecentFiles()) {
+        for (String filePath : controller.getRecentFiles()) {
             File file = new File(filePath);
             if (file.exists()) {
                 addRecentFileButton(file);
             } else {
                 // Remove non-existent files from recent files
-                preferencesManager.removeRecentFile(filePath);
+                controller.removeRecentFile(filePath);
             }
         }
     }
     
     /**
-     * Refreshes the entire recent files list from PreferencesManager
+     * Refreshes the entire recent files list from the controller.
      */
     private void refreshRecentFilesList() {
         // Clear current UI
@@ -411,6 +416,7 @@ public class MainPanel extends JPanel {
     }
 
     public MainPanel() {
+        this.controller = new AutomatonController();
         this.fileManager = new FileManager();
         this.setLayout(new BorderLayout());
         this.setSize(900, 400); 
@@ -477,7 +483,15 @@ public class MainPanel extends JPanel {
         this.add(mainSplitPane, BorderLayout.CENTER);
 
     }
-    
+
+    /**
+     * Gets the controller for delegating operations.
+     * Used by AbstractAutomatonPanel and subclasses.
+     */
+    public AutomatonController getController() {
+        return controller;
+    }
+
     /**
      * Toggles the visibility of the sidebar (recent files panel)
      */
@@ -744,36 +758,43 @@ public class MainPanel extends JPanel {
     }
     
     /**
-     * Creates a new automaton of the specified type
-     * Called from the menu bar
+     * Creates a new automaton of the specified type.
+     * Called from the menu bar. Uses controller for automaton creation.
      */
     public void createNewAutomaton(String type) {
-        Automaton automaton = null;
+        // Convert string type to MachineType enum
+        // Handle "REX" -> REGEX mapping for backward compatibility
+        MachineType machineType;
+        try {
+            String enumType = type.equals("REX") ? "REGEX" : type;
+            machineType = MachineType.valueOf(enumType);
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, "Unknown automaton type: " + type, "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Create automaton using controller
+        Automaton automaton = controller.createAutomaton(machineType);
         JPanel panel = null;
 
-        switch(type) {
-            case "NFA":
-                automaton = new NFA();
+        // Create the appropriate UI panel
+        switch (machineType) {
+            case NFA:
                 panel = new NFAPanel(this, automaton);
                 break;
-            case "DFA":
-                automaton = new DFA();
+            case DFA:
                 panel = new DFAPanel(this, automaton);
                 break;
-            case "PDA":
-                automaton = new PDA();
+            case PDA:
                 panel = new PDAPanel(this, automaton);
                 break;
-            case "TM":
-                automaton = new TM();
+            case TM:
                 panel = new TMPanel(this, automaton);
                 break;
-            case "CFG":
-                automaton = new CFG();
+            case CFG:
                 panel = new CFGPanel(this, automaton);
                 break;
-            case "REX":
-                automaton = new RegularExpression();
+            case REGEX:
                 panel = new REXPanel(this, automaton);
                 break;
             default:
@@ -781,9 +802,10 @@ public class MainPanel extends JPanel {
                 return;
         }
 
-        // Apply template to new automaton panels
-        if (automaton != null && panel instanceof AbstractAutomatonPanel) {
-            ((AbstractAutomatonPanel) panel).setInitialContent(automaton.getDefaultTemplate());
+        // Apply template to new automaton panels using controller
+        if (panel instanceof AbstractAutomatonPanel) {
+            String template = controller.getDefaultTemplate(machineType);
+            ((AbstractAutomatonPanel) panel).setInitialContent(template);
         }
 
         if (panel != null && panel instanceof AutomatonPanel) {
@@ -912,17 +934,19 @@ public class MainPanel extends JPanel {
     }
     
     /**
-     * Gets recent files for menu integration
+     * Gets recent files for menu integration.
+     * Uses controller for data access.
      */
     public java.util.List<String> getRecentFiles() {
-        return preferencesManager.getRecentFiles();
+        return controller.getRecentFiles();
     }
-    
+
     /**
-     * Clears all recent files
+     * Clears all recent files.
+     * Uses controller for data management.
      */
     public void clearRecentFiles() {
-        preferencesManager.clearRecentFiles();
+        controller.clearRecentFiles();
         refreshRecentFilesList();
         if (parentFrame != null) {
             parentFrame.updateRecentFilesMenu();
@@ -937,7 +961,7 @@ public class MainPanel extends JPanel {
         if (file.exists()) {
             fileManager.openFile(file);
         } else {
-            preferencesManager.removeRecentFile(filePath);
+            controller.removeRecentFile(filePath);
             refreshRecentFilesList();
             if (parentFrame != null) {
                 parentFrame.updateRecentFilesMenu();
@@ -957,26 +981,28 @@ public class MainPanel extends JPanel {
     }
     
     /**
-     * Saves currently open tabs for session restore
+     * Saves currently open tabs for session restore.
+     * Uses controller for session persistence.
      */
     public void saveCurrentSession() {
-        java.util.List<String> openFilePaths = new java.util.ArrayList<>();
-        
+        java.util.List<File> openFiles = new java.util.ArrayList<>();
+
         for (AutomatonTab tab : openTabs) {
             if (tab.getFile() != null) {
-                openFilePaths.add(tab.getFile().getAbsolutePath());
+                openFiles.add(tab.getFile());
             }
         }
-        
-        preferencesManager.setLastOpenedFiles(openFilePaths);
+
+        controller.saveOpenFiles(openFiles);
     }
-    
+
     /**
-     * Restores previously opened files from last session
+     * Restores previously opened files from last session.
+     * Uses controller for session data.
      */
     private void restorePreviousSession() {
-        java.util.List<String> lastOpenedFiles = preferencesManager.getLastOpenedFiles();
-        
+        java.util.List<String> lastOpenedFiles = controller.getLastOpenedFiles();
+
         for (String filePath : lastOpenedFiles) {
             File file = new File(filePath);
             if (file.exists()) {
@@ -987,7 +1013,7 @@ public class MainPanel extends JPanel {
                 }
             } else {
                 // Remove non-existent files from last opened files
-                preferencesManager.removeRecentFile(filePath);
+                controller.removeRecentFile(filePath);
             }
         }
     }

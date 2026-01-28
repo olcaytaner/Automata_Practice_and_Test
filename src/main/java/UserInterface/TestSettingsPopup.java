@@ -1,18 +1,37 @@
 package UserInterface;
 
-import javax.swing.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import java.awt.*;
-import java.awt.event.KeyEvent;
+
+import controller.AutomatonController;
+import service.SessionService;
 
 /**
  * Popup panel for configuring global test settings.
  * Appears anchored below the settings button.
+ * Uses controller for settings access instead of singleton.
  */
 public class TestSettingsPopup extends JPopupMenu {
+
+    // Controller for settings access
+    private final AutomatonController controller;
 
     // ═══════════════════════════════════════════════════════════════════
     // COLORS
@@ -41,7 +60,14 @@ public class TestSettingsPopup extends JPopupMenu {
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════
 
-    public TestSettingsPopup() {
+    /**
+     * Creates a test settings popup.
+     *
+     * @param controller The controller for accessing settings
+     */
+    public TestSettingsPopup(AutomatonController controller) {
+        this.controller = controller;
+
         setBackground(BACKGROUND_COLOR);
         setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(SECTION_BORDER_COLOR, 1),
@@ -249,7 +275,7 @@ public class TestSettingsPopup extends JPopupMenu {
     private void loadFromSettings() {
         isUpdating = true;
         try {
-            TestSettings settings = TestSettings.getInstance();
+            SessionService.TestSettings settings = controller.getTestSettings();
             minPointsSpinner.setValue(settings.getMinPoints());
             maxPointsSpinner.setValue(settings.getMaxPoints());
             timeoutSpinner.setValue(settings.getTimeoutSeconds());
@@ -264,17 +290,17 @@ public class TestSettingsPopup extends JPopupMenu {
     private void saveToSettings() {
         if (isUpdating) return;
 
-        TestSettings settings = TestSettings.getInstance();
-        settings.setMinPoints((Integer) minPointsSpinner.getValue());
-        settings.setMaxPoints((Integer) maxPointsSpinner.getValue());
-        settings.setTimeoutSeconds((Integer) timeoutSpinner.getValue());
-        settings.setMaxRules(parseOptionalInt(maxRulesField.getText()));
-        settings.setMaxTransitions(parseOptionalInt(maxTransitionsField.getText()));
-        settings.setMaxRegexLength(parseOptionalInt(maxRegexLengthField.getText()));
+        SessionService sessionService = controller.getSessionService();
+        sessionService.setTestMinPoints((Integer) minPointsSpinner.getValue());
+        sessionService.setTestMaxPoints((Integer) maxPointsSpinner.getValue());
+        sessionService.setTestTimeout((Integer) timeoutSpinner.getValue());
+        sessionService.setTestMaxRules(parseOptionalInt(maxRulesField.getText()));
+        sessionService.setTestMaxTransitions(parseOptionalInt(maxTransitionsField.getText()));
+        sessionService.setTestMaxRegexLength(parseOptionalInt(maxRegexLengthField.getText()));
     }
 
     private void resetToDefaults() {
-        TestSettings.getInstance().resetToDefaults();
+        controller.getSessionService().resetTestSettings();
         loadFromSettings();
     }
 

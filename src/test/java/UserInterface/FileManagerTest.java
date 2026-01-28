@@ -263,7 +263,7 @@ public class FileManagerTest {
             File testFile = tempDir.resolve("test.nfa").toFile();
             Files.write(testFile.toPath(), "test content".getBytes());
             
-            // The addToRecentFiles method uses PreferencesManager internally
+            // The addToRecentFiles method uses SessionService internally
             // We can only verify it doesn't throw an exception
             assertDoesNotThrow(() -> {
                 fileManager.addToRecentFiles(testFile);

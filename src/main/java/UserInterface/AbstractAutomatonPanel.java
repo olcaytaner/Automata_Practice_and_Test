@@ -14,6 +14,10 @@ import common.MachineType;
 import common.ParseResult;
 import common.TestRunner;
 import common.ValidationMessage;
+import controller.AutomatonController;
+import service.SessionService;
+import service.TestService;
+import viewmodel.TestResultViewModel;
 import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
 import org.apache.batik.swing.JSVGCanvas;
 import org.apache.batik.util.XMLResourceDescriptor;
@@ -90,6 +94,12 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
      */
     protected abstract String getTabLabelText();
 
+    /**
+     * Gets the controller from the main panel for delegating operations.
+     */
+    protected AutomatonController getController() {
+        return mainPanel.getController();
+    }
 
     /**
      * Initialize the main panel properties
@@ -151,7 +161,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
      */
     public void showSettingsPopup() {
         if (settingsPopup == null) {
-            settingsPopup = new TestSettingsPopup();
+            settingsPopup = new TestSettingsPopup(mainPanel.getController());
         }
         settingsPopup.showRelativeTo(settingsButton);
     }
@@ -199,30 +209,31 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
     }
     
     /**
-     * Run inline test for the entered input
+     * Run inline test for the entered input.
+     * Uses the controller for parsing and execution.
      */
     private void runInlineTest() {
         String input = inlineTestInput.getText();
         String automatonText = textArea.getText();
-        
-        // Parse the automaton
-        ParseResult parseResult = automaton.parse(automatonText);
-        
+
+        // Parse the automaton using the controller
+        ParseResult parseResult = getController().parse(automaton, automatonText);
+
         if (!parseResult.isSuccess()) {
             inlineTestResult.setText("⚠ Parse Error");
             inlineTestResult.setForeground(new Color(200, 100, 0));
             updateWarningDisplayWithParseResult(parseResult, automatonText);
             return;
         }
-        
-        // Execute the test
+
+        // Execute the test using the controller
         try {
             Automaton parsedAutomaton = parseResult.getAutomaton();
-            ExecutionResult execResult = parsedAutomaton.execute(input);
-            
+            ExecutionResult execResult = getController().execute(parsedAutomaton, input);
+
             boolean accepted = execResult.isAccepted();
             String displayInput = input.isEmpty() ? "ε" : "\"" + input + "\"";
-            
+
             if (accepted) {
                 inlineTestResult.setText("✓ " + displayInput + " → ACCEPT");
                 inlineTestResult.setForeground(new Color(0, 150, 0));
@@ -230,7 +241,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
                 inlineTestResult.setText("✗ " + displayInput + " → REJECT");
                 inlineTestResult.setForeground(new Color(200, 0, 0));
             }
-            
+
             // Update warning field with execution trace
             String traceInfo = "Quick Test Result:\n";
             traceInfo += "Input: " + displayInput + "\n";
@@ -240,7 +251,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
             }
             warningField.setText(traceInfo);
             warningField.setCaretPosition(0);
-            
+
         } catch (Exception e) {
             inlineTestResult.setText("⚠ Execution Error");
             inlineTestResult.setForeground(new Color(200, 100, 0));
@@ -493,12 +504,10 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
     public void compileWithFigure() {
         final String inputText = textArea.getText();
 
-        // Check if this is a machine type that doesn't need visualization
-        boolean skipVisualization = automaton.getMachineType() == MachineType.CFG ||
-                                    automaton.getMachineType() == MachineType.REGEX;
+        // Check if this is a machine type that doesn't support visualization
+        boolean skipVisualization = !getController().supportsVisualization(automaton.getMachineType());
 
         final String[] errorText = {""};
-
 
         // Show loading indicator immediately
         showLoadingIndicator();
@@ -507,33 +516,44 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
         SwingWorker<GraphGenerationResult, Void> worker = new SwingWorker<GraphGenerationResult, Void>() {
             @Override
             protected GraphGenerationResult doInBackground() throws Exception {
-                // This runs on background thread - First parse, then generate if successful
-                ParseResult parseResult = automaton.parse(inputText);
-                JLabel imageLabel = automaton.toGraphviz(inputText);
+                // Use controller for parsing and visualization generation
+                AutomatonController.CompileResult compileResult =
+                    getController().compileWithVisualization(automaton, inputText);
 
-                boolean validSVG = imageLabel.getText().startsWith("<svg") && imageLabel.getText().contains("xmlns=\"http://www.w3.org/2000/svg\"");
-
-                if (!validSVG) {
-                    errorText[0] = imageLabel.getText();
-                }
+                ParseResult parseResult = new ParseResult(
+                    compileResult.isSuccess(),
+                    compileResult.getValidationMessages(),
+                    compileResult.isSuccess() ? automaton : null
+                );
 
                 JSVGCanvas imageCanvas = null;
-                if (parseResult.isSuccess() && !skipVisualization && validSVG) {
-                    // Only generate image if parsing succeeded and visualization is not skipped
-                    StringReader svgTextReader = new StringReader(imageLabel.getText());
+                if (compileResult.isSuccess() && compileResult.hasVisualization()) {
+                    String svgContent = compileResult.getSvgContent();
 
-                    String parser = XMLResourceDescriptor.getXMLParserClassName();
-                    SAXSVGDocumentFactory factory = new SAXSVGDocumentFactory(parser);
-                    SVGDocument svgDocument = factory.createSVGDocument(null, svgTextReader);
+                    boolean validSVG = svgContent != null &&
+                        svgContent.startsWith("<svg") &&
+                        svgContent.contains("xmlns=\"http://www.w3.org/2000/svg\"");
 
-                    svgTextReader.close();
+                    if (!validSVG && svgContent != null) {
+                        errorText[0] = svgContent;
+                    }
 
-                    imageCanvas = new JSVGCanvas();
-                    imageCanvas.setSVGDocument(svgDocument);
+                    if (validSVG) {
+                        // Create SVG canvas from the SVG content
+                        StringReader svgTextReader = new StringReader(svgContent);
+                        String parser = XMLResourceDescriptor.getXMLParserClassName();
+                        SAXSVGDocumentFactory factory = new SAXSVGDocumentFactory(parser);
+                        SVGDocument svgDocument = factory.createSVGDocument(null, svgTextReader);
+                        svgTextReader.close();
 
-                    JSVGCanvas svgCanvas = createJSVGCanvas(imageCanvas);
+                        imageCanvas = new JSVGCanvas();
+                        imageCanvas.setSVGDocument(svgDocument);
 
-                    updateGraphPanelWithImage(svgCanvas);
+                        JSVGCanvas svgCanvas = createJSVGCanvas(imageCanvas);
+                        updateGraphPanelWithImage(svgCanvas);
+                    }
+                } else if (!compileResult.isSuccess()) {
+                    errorText[0] = compileResult.getErrorMessage();
                 }
 
                 return new GraphGenerationResult(parseResult, imageCanvas, inputText);
@@ -726,14 +746,14 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
      * Run tests for the current automaton using a corresponding test file
      */
     protected void runTestFile() {
-        // First compile/parse the current automaton
+        // First compile/parse the current automaton using controller
         String inputText = textArea.getText();
         automaton.setInputText(inputText);
-        
-        ParseResult parseResult = automaton.parse(inputText);
+
+        ParseResult parseResult = getController().parse(automaton, inputText);
         if (!parseResult.isSuccess()) {
-            JOptionPane.showMessageDialog(this, 
-                "Cannot run tests: Automaton has parsing errors. Check warnings panel.", 
+            JOptionPane.showMessageDialog(this,
+                "Cannot run tests: Automaton has parsing errors. Check warnings panel.",
                 "Test Error", JOptionPane.ERROR_MESSAGE);
             updateWarningDisplay();
             return;
@@ -776,14 +796,14 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
      */
     @Override
     public void runWithFile() {
-        // First compile/parse the current automaton
+        // First compile/parse the current automaton using controller
         String inputText = textArea.getText();
         automaton.setInputText(inputText);
-        
-        ParseResult parseResult = automaton.parse(inputText);
+
+        ParseResult parseResult = getController().parse(automaton, inputText);
         if (!parseResult.isSuccess()) {
-            JOptionPane.showMessageDialog(this, 
-                "Cannot run tests: Automaton has parsing errors. Check warnings panel.", 
+            JOptionPane.showMessageDialog(this,
+                "Cannot run tests: Automaton has parsing errors. Check warnings panel.",
                 "Test Error", JOptionPane.ERROR_MESSAGE);
             updateWarningDisplay();
             return;
@@ -809,19 +829,16 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
     }
 
     /**
-     * Run tests in background with progress dialog
+     * Run tests in background with progress dialog.
+     * Uses controller to get test settings and returns ViewModels.
+     * All type-specific logic (instanceof checks) is handled in the service layer.
      */
     private void runTestsInBackground(Automaton testAutomaton, String testFilePath) {
-        // Get settings from global TestSettings
-        TestSettings settings = TestSettings.getInstance();
-        int minPoints = settings.getMinPoints();
-        int maxPoints = settings.getMaxPoints();
-        int timeoutSeconds = settings.getTimeoutSeconds();
-        Integer maxRulesLimit = settings.getMaxRules();
-        Integer maxTransitionsLimit = settings.getMaxTransitions();
+        // Get settings from controller (which uses SessionService)
+        SessionService.TestSettings settings = getController().getTestSettings();
 
         // Validate settings
-        if (minPoints >= maxPoints) {
+        if (settings.getMinPoints() >= settings.getMaxPoints()) {
             JOptionPane.showMessageDialog(this,
                 "Minimum points must be less than maximum points.\nPlease check Test Settings.",
                 "Invalid Point Configuration",
@@ -829,196 +846,62 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
             return;
         }
 
-        // Check if test file has overrides (timeout, max_rules, max_transitions)
-        long effectiveTimeoutMs = timeoutSeconds * 1000L;
-        Integer effectiveMaxRules = maxRulesLimit;
-        Integer effectiveMaxTransitions = maxTransitionsLimit;
-        try {
-            common.TestFileParser.TestFileResult testFileResult = common.TestFileParser.parseTestFile(testFilePath);
-            if (testFileResult.hasTimeout()) {
-                effectiveTimeoutMs = testFileResult.getTimeout() * 1000L;
-            }
-            if (testFileResult.hasMaxRules()) {
-                effectiveMaxRules = testFileResult.getMaxRules();
-            }
-            if (testFileResult.hasMaxTransitions()) {
-                effectiveMaxTransitions = testFileResult.getMaxTransitions();
-            }
-        } catch (Exception e) {
-            // If we can't parse the test file, continue with UI values
-        }
-        final long finalTimeoutMs = effectiveTimeoutMs;
-        final Integer finalMaxRules = effectiveMaxRules;
-        final Integer finalMaxTransitions = effectiveMaxTransitions;
+        // Check if test file has overrides and create effective settings
+        SessionService.TestSettings effectiveSettings = createEffectiveSettings(settings, testFilePath);
 
-        // Create progress dialog
-        javax.swing.JDialog progressDialog = new javax.swing.JDialog(
-            javax.swing.SwingUtilities.getWindowAncestor(this), 
-            "Running Tests...", 
-            javax.swing.JDialog.ModalityType.APPLICATION_MODAL
+        // Create progress dialog using extracted component
+        TestProgressDialog progressDialog = new TestProgressDialog(
+            SwingUtilities.getWindowAncestor(this),
+            effectiveSettings.getTimeoutMs() / 1000
         );
-        
-        javax.swing.JPanel progressPanel = new javax.swing.JPanel();
-        progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.Y_AXIS));
-        progressPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        
-        javax.swing.JLabel statusLabel = new javax.swing.JLabel("Initializing...");
-        statusLabel.setAlignmentX(CENTER_ALIGNMENT);
-        
-        javax.swing.JProgressBar progressBar = new javax.swing.JProgressBar(0, 100);
-        progressBar.setValue(0);
-        progressBar.setStringPainted(false); // Remove text from progress bar itself
-        progressBar.setAlignmentX(CENTER_ALIGNMENT);
-        
-        javax.swing.JLabel progressLabel = new javax.swing.JLabel("0% - Preparing tests...");
-        progressLabel.setAlignmentX(CENTER_ALIGNMENT);
-        progressLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        
-        javax.swing.JLabel timeoutDisplayLabel = new javax.swing.JLabel("Total timeout: " + (finalTimeoutMs / 1000) + " seconds for all tests");
-        timeoutDisplayLabel.setAlignmentX(CENTER_ALIGNMENT);
-        timeoutDisplayLabel.setFont(new Font("Arial", Font.PLAIN, 10));
-        
-        javax.swing.JButton cancelButton = new javax.swing.JButton("Cancel");
-        cancelButton.setAlignmentX(CENTER_ALIGNMENT);
-        
-        progressPanel.add(statusLabel);
-        progressPanel.add(Box.createVerticalStrut(8));
-        progressPanel.add(progressBar);
-        progressPanel.add(Box.createVerticalStrut(5));
-        progressPanel.add(progressLabel);
-        progressPanel.add(Box.createVerticalStrut(8));
-        progressPanel.add(timeoutDisplayLabel);
-        progressPanel.add(Box.createVerticalStrut(15));
-        progressPanel.add(cancelButton);
-        
-        progressDialog.setContentPane(progressPanel);
-        progressDialog.setSize(350, 180);
-        progressDialog.setLocationRelativeTo(this);
-        progressDialog.setDefaultCloseOperation(javax.swing.JDialog.DO_NOTHING_ON_CLOSE);
 
-        // Capture min/max points as final variables for use in SwingWorker
-        final int finalMinPoints = minPoints;
-        final int finalMaxPoints = maxPoints;
+        // Create SwingWorker that returns ViewModel (no instanceof checks needed in done())
+        SwingWorker<TestResultViewModel, TestRunner.TestProgress> worker =
+            new SwingWorker<TestResultViewModel, TestRunner.TestProgress>() {
 
-        // Create SwingWorker for background execution
-        SwingWorker<TestRunner.TestResult, TestRunner.TestProgress> worker = new SwingWorker<TestRunner.TestResult, TestRunner.TestProgress>() {
             @Override
-            protected TestRunner.TestResult doInBackground() throws Exception {
+            protected TestResultViewModel doInBackground() throws Exception {
                 // Create progress callback that publishes updates
-                TestRunner.TestProgressCallback progressCallback = new TestRunner.TestProgressCallback() {
+                TestService.TestProgressCallback progressCallback = new TestService.TestProgressCallback() {
                     @Override
                     public void onTestStarted(int currentTest, int totalTests, String input) {
                         publish(TestRunner.TestProgress.started(currentTest, totalTests, input));
                     }
-                    
+
                     @Override
                     public void onTestCompleted(int currentTest, int totalTests, String input, boolean passed) {
                         publish(TestRunner.TestProgress.completed(currentTest, totalTests, input, passed));
                     }
                 };
-                
-                // Run tests with timeout and progress callback
-                return TestRunner.runTests(testAutomaton, testFilePath, finalTimeoutMs, progressCallback);
+
+                // Use controller's ViewModel-returning method (all type checks happen in service)
+                return getController().getTestService().runTestsWithValidation(
+                    testAutomaton, testFilePath, effectiveSettings, progressCallback);
             }
-            
+
             @Override
             protected void process(java.util.List<TestRunner.TestProgress> chunks) {
-                // Update UI with progress information
+                // Update progress dialog with latest progress
                 if (!chunks.isEmpty()) {
                     TestRunner.TestProgress latest = chunks.get(chunks.size() - 1);
-                    
-                    // Update progress bar
-                    int percentage = latest.getProgressPercentage();
-                    progressBar.setValue(percentage);
-                    
-                    // Update status and progress bar string
-                    String inputDisplay = latest.getCurrentInput().isEmpty() ? "ε" : latest.getCurrentInput();
-                    if (inputDisplay.length() > 20) {
-                        inputDisplay = inputDisplay.substring(0, 17) + "...";
-                    }
-                    
-                    if (latest.isCompleted()) {
-                        String result = latest.isPassed() ? "✓" : "✗";
-                        statusLabel.setText(String.format("Test %d/%d: %s %s", 
-                            latest.getCurrentTest(), latest.getTotalTests(), inputDisplay, result));
-                        progressLabel.setText(String.format("%d%% - Test %d of %d completed", 
-                            percentage, latest.getCurrentTest(), latest.getTotalTests()));
-                    } else {
-                        statusLabel.setText(String.format("Running test %d/%d: %s", 
-                            latest.getCurrentTest(), latest.getTotalTests(), inputDisplay));
-                        progressLabel.setText(String.format("%d%% - Running test %d of %d", 
-                            percentage, latest.getCurrentTest(), latest.getTotalTests()));
-                    }
+                    progressDialog.updateProgress(latest);
                 }
             }
-            
+
             @Override
             protected void done() {
-                progressDialog.dispose();
+                progressDialog.close();
 
                 try {
-                    TestRunner.TestResult result = get();
-                    result.setMinPoints(finalMinPoints);
-                    result.setMaxPoints(finalMaxPoints);
+                    TestResultViewModel result = get();
 
-                    // Check for limit violations before showing results
-                    // CFG: Check max rules limit
-                    if (finalMaxRules != null && testAutomaton instanceof ContextFreeGrammar.CFG) {
-                        ContextFreeGrammar.CFG cfg = (ContextFreeGrammar.CFG) testAutomaton;
-                        common.ValidationMessage rulesValidation = cfg.validateRulesCount(finalMaxRules);
-                        if (rulesValidation != null) {
-                            // Rules limit violation - show special result
-                            int actualRules = cfg.getProductions().size();
-                            String violationMessage = String.format(
-                                "CFG RULES LIMIT VIOLATION\n" +
-                                "══════════════════════════════════════════════════\n\n" +
-                                "Your CFG exceeds the maximum allowed production rules.\n\n" +
-                                "Actual rules:    %d\n" +
-                                "Maximum allowed: %d\n" +
-                                "Exceeded by:     %d\n\n" +
-                                "Grade: 0.0/%d points (automatic zero for rules limit violation)\n",
-                                actualRules, finalMaxRules,
-                                actualRules - finalMaxRules,
-                                finalMaxPoints
-                            );
-                            JOptionPane.showMessageDialog(AbstractAutomatonPanel.this,
-                                violationMessage,
-                                "Rules Limit Violation",
-                                JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
+                    // No instanceof checks needed - ViewModel tells us what to display
+                    if (result.hasLimitViolation()) {
+                        showLimitViolationDialog(result);
+                    } else {
+                        showTestResults(result);
                     }
-
-                    // PDA: Check max transitions limit
-                    if (finalMaxTransitions != null && testAutomaton instanceof PushDownAutomaton.PDA) {
-                        PushDownAutomaton.PDA pda = (PushDownAutomaton.PDA) testAutomaton;
-                        common.ValidationMessage transitionsValidation = pda.validateTransitionsCount(finalMaxTransitions);
-                        if (transitionsValidation != null) {
-                            // Transitions limit violation - show special result
-                            int actualTransitions = pda.getTransitionCount();
-                            String violationMessage = String.format(
-                                "PDA TRANSITIONS LIMIT VIOLATION\n" +
-                                "══════════════════════════════════════════════════\n\n" +
-                                "Your PDA exceeds the maximum allowed transitions.\n\n" +
-                                "Actual transitions: %d\n" +
-                                "Maximum allowed:    %d\n" +
-                                "Exceeded by:        %d\n\n" +
-                                "Grade: 0.0/%d points (automatic zero for transitions limit violation)\n",
-                                actualTransitions, finalMaxTransitions,
-                                actualTransitions - finalMaxTransitions,
-                                finalMaxPoints
-                            );
-                            JOptionPane.showMessageDialog(AbstractAutomatonPanel.this,
-                                violationMessage,
-                                "Transitions Limit Violation",
-                                JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-                    }
-
-                    showTestResults(result);
                 } catch (InterruptedException e) {
-                    // Test was cancelled
                     JOptionPane.showMessageDialog(AbstractAutomatonPanel.this,
                         "Test execution was cancelled.",
                         "Test Cancelled",
@@ -1031,67 +914,85 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
                 }
             }
         };
-        
-        // Handle cancel button
-        cancelButton.addActionListener(e -> {
-            worker.cancel(true);
-            progressDialog.dispose();
-        });
-        
+
+        // Associate worker with dialog for cancel handling
+        progressDialog.setWorker(worker);
+
         // Start the worker
         worker.execute();
-        
+
         // Show progress dialog (blocks until disposed)
         progressDialog.setVisible(true);
     }
-    
+
     /**
-     * Find the corresponding test file for the current automaton
+     * Creates effective test settings by merging UI settings with test file overrides.
      */
-    private String findTestFile() {
-        if (file != null) {
-            // Get the base name without extension
-            String fileName = file.getName();
-            String baseName;
-            int lastDot = fileName.lastIndexOf('.');
-            if (lastDot > 0) {
-                baseName = fileName.substring(0, lastDot);
-            } else {
-                baseName = fileName;
+    private SessionService.TestSettings createEffectiveSettings(
+            SessionService.TestSettings settings, String testFilePath) {
+
+        int timeoutSeconds = settings.getTimeoutSeconds();
+        Integer maxRules = settings.getMaxRules();
+        Integer maxTransitions = settings.getMaxTransitions();
+
+        try {
+            common.TestFileParser.TestFileResult testFileResult =
+                common.TestFileParser.parseTestFile(testFilePath);
+            if (testFileResult.hasTimeout()) {
+                timeoutSeconds = testFileResult.getTimeout();
             }
-            
-            // Look for .test file in the same directory
-            File testFile = new File(file.getParent(), baseName + ".test");
-            if (testFile.exists()) {
-                return testFile.getAbsolutePath();
+            if (testFileResult.hasMaxRules()) {
+                maxRules = testFileResult.getMaxRules();
             }
+            if (testFileResult.hasMaxTransitions()) {
+                maxTransitions = testFileResult.getMaxTransitions();
+            }
+        } catch (Exception e) {
+            // If we can't parse the test file, continue with UI values
         }
-        
-        return null;
+
+        return new SessionService.TestSettings(
+            settings.getMinPoints(),
+            settings.getMaxPoints(),
+            timeoutSeconds,
+            maxRules,
+            maxTransitions,
+            settings.getMaxRegexLength()
+        );
     }
 
     /**
-     * Display test results in a dialog
+     * Display limit violation dialog using ViewModel data.
      */
-    private void showTestResults(TestRunner.TestResult result) {
+    private void showLimitViolationDialog(TestResultViewModel result) {
+        JOptionPane.showMessageDialog(this,
+            result.getLimitViolationMessage(),
+            result.getDialogTitle(),
+            JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * Display test results in a dialog using ViewModel.
+     */
+    private void showTestResults(TestResultViewModel result) {
         StringBuilder message = new StringBuilder();
-        
+
         // Add timeout warning if any tests timed out
-        if (result.getTimeoutCount() > 0) {
-            int displayTimeout = TestSettings.getInstance().getTimeoutSeconds();
-            message.append("⚠️ WARNING: Test suite timed out after ")
+        if (result.hasTimeouts()) {
+            int displayTimeout = getController().getTestSettings().getTimeoutSeconds();
+            message.append("\u26A0\uFE0F WARNING: Test suite timed out after ")
                    .append(displayTimeout)
                    .append(" seconds total.\n")
                    .append("This may indicate infinite loops or very long computations.\n\n");
         }
-        
-        // Use the new classification-based detailed report
+
+        // Use the detailed report from ViewModel
         message.append(result.getDetailedReport());
-        
+
         // Determine dialog type based on results
         int messageType;
         String title;
-        if (result.getTimeoutCount() > 0) {
+        if (result.hasTimeouts()) {
             messageType = JOptionPane.WARNING_MESSAGE;
             title = "Tests Completed with Timeouts";
         } else if (result.getFailedTests() == 0) {
@@ -1104,18 +1005,32 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
             messageType = JOptionPane.ERROR_MESSAGE;
             title = "All Tests Failed";
         }
-        
+
         // Create scrollable text area for long results
         JTextArea resultArea = new JTextArea(message.toString());
         resultArea.setEditable(false);
         resultArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        
+
         JScrollPane resultScrollPane = new JScrollPane(resultArea);
         resultScrollPane.setPreferredSize(new Dimension(500, 350));
-        
+
         JOptionPane.showMessageDialog(this, resultScrollPane, title, messageType);
     }
     
+    /**
+     * Find the corresponding test file for the current automaton.
+     * Delegates to the controller's TestService.
+     */
+    private String findTestFile() {
+        if (file != null) {
+            File testFile = getController().findTestFile(file);
+            if (testFile != null) {
+                return testFile.getAbsolutePath();
+            }
+        }
+        return null;
+    }
+
     @Override
     public void saveAutomaton() {
         if (file != null) {
@@ -1212,75 +1127,34 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
     }
     
     /**
-     * Updates the warning display with current validation messages
+     * Updates the warning display with current validation messages.
+     * Uses the controller's AutomatonService for validation and formatting.
      */
     protected void updateWarningDisplay() {
         String inputText = textArea.getText();
-        automaton.setInputText(inputText);
-        
-        List<ValidationMessage> messages = automaton.validate();
-        String warningText;
-        if (messages.isEmpty()) {
-            warningText = "No warnings or errors found!";
-        } else {
-            StringBuilder result = new StringBuilder();
-            for (ValidationMessage msg : messages) {
-                result.append(msg.toString()).append("\n");
-            }
-            warningText = result.toString();
-        }
-        
-        warningField.setText(warningText);
-        warningField.setCaretPosition(0); 
-    }
-    
-    /**
-     * Update warning display for a successfully parsed automaton
-     */
-    protected void updateWarningDisplayForParsedAutomaton(String inputText) {
-        // Parse the input text to get a fresh automaton instance
-        ParseResult parseResult = automaton.parse(inputText);
-        
-        StringBuilder result = new StringBuilder();
-        
-        // Always show parsing messages first (includes syntax errors)
-        List<ValidationMessage> parseMessages = parseResult.getValidationMessages();
-        if (parseMessages != null && !parseMessages.isEmpty()) {
-            for (ValidationMessage msg : parseMessages) {
-                result.append(msg.toString()).append("\n");
-            }
-        }
-        
-        if (parseResult.isSuccess() && parseResult.getAutomaton() != null) {
-            // Use the parsed automaton for validation
-            Automaton parsedAutomaton = parseResult.getAutomaton();
-            parsedAutomaton.setInputText(inputText);
-            
-            List<ValidationMessage> validationMessages = parsedAutomaton.validate();
-            if (validationMessages != null && !validationMessages.isEmpty()) {
-                for (ValidationMessage msg : validationMessages) {
-                    result.append(msg.toString()).append("\n");
-                }
-            }
-        }
-        
-        String warningText;
-        if (result.length() == 0) {
-            warningText = "No warnings or errors found!";
-        } else {
-            warningText = result.toString();
-        }
-        
+        List<ValidationMessage> messages = getController().validate(automaton, inputText);
+        String warningText = getController().formatValidationMessages(messages);
         warningField.setText(warningText);
         warningField.setCaretPosition(0);
     }
     
     /**
-     * Update warning display using an existing parse result
+     * Update warning display for a successfully parsed automaton.
+     * Parses first, then validates and formats the combined messages.
+     */
+    protected void updateWarningDisplayForParsedAutomaton(String inputText) {
+        // Parse and validate using the controller
+        ParseResult parseResult = getController().parse(automaton, inputText);
+        updateWarningDisplayWithParseResult(parseResult, inputText);
+    }
+    
+    /**
+     * Update warning display using an existing parse result.
+     * Combines parse messages with validation messages from the controller.
      */
     protected void updateWarningDisplayWithParseResult(ParseResult parseResult, String inputText) {
         StringBuilder result = new StringBuilder();
-        
+
         // Always show parsing messages first (includes syntax errors)
         List<ValidationMessage> parseMessages = parseResult.getValidationMessages();
         if (parseMessages != null && !parseMessages.isEmpty()) {
@@ -1288,41 +1162,37 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
                 result.append(msg.toString()).append("\n");
             }
         }
-        
+
+        // If parsing succeeded, also show validation messages
         if (parseResult.isSuccess() && parseResult.getAutomaton() != null) {
-            // Use the parsed automaton for validation
-            Automaton parsedAutomaton = parseResult.getAutomaton();
-            parsedAutomaton.setInputText(inputText);
-            
-            List<ValidationMessage> validationMessages = parsedAutomaton.validate();
+            List<ValidationMessage> validationMessages = getController().validate(
+                parseResult.getAutomaton(), inputText);
             if (validationMessages != null && !validationMessages.isEmpty()) {
                 for (ValidationMessage msg : validationMessages) {
                     result.append(msg.toString()).append("\n");
                 }
             }
         }
-        
-        String warningText;
-        if (result.length() == 0) {
-            warningText = "No warnings or errors found!";
-        } else {
-            warningText = result.toString();
-        }
-        
+
+        String warningText = result.length() == 0
+            ? "No warnings or errors found!"
+            : result.toString();
+
         warningField.setText(warningText);
         warningField.setCaretPosition(0);
     }
 
     /**
-     * Saves the current content to a file
+     * Saves the current content to a file.
+     * Delegates to the controller's FileService.
      */
     protected void saveFileContent(File file) {
         String text = textArea.getText();
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write(text);
+        boolean success = getController().saveToFile(file, text);
+        if (success) {
             JOptionPane.showMessageDialog(this, "File saved successfully!");
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error saving file: " + e.getMessage());
+        } else {
+            JOptionPane.showMessageDialog(this, "Error saving file.");
         }
     }
 

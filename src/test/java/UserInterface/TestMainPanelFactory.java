@@ -15,11 +15,10 @@ public class TestMainPanelFactory {
      * This method does NOT enable headless mode, but overrides dialog methods.
      */
     public static MainPanel createForTesting() {
-        // Clear any previous session files to prevent restoration
-        PreferencesManager testPrefs = new PreferencesManager();
-        testPrefs.setLastOpenedFiles(new java.util.ArrayList<>());
-        
         MainPanel panel = new MainPanel();
+
+        // Clear any previous session files to prevent restoration via controller
+        panel.getController().getSessionService().setLastOpenedFiles(new java.util.ArrayList<>());
         
         // Override the file manager with a mock version that doesn't show dialogs
         panel.fileManager = new TestFileManager(panel);
