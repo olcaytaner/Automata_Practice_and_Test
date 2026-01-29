@@ -17,7 +17,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 import ContextFreeGrammar.CFG;
 import DeterministicFiniteAutomaton.DFA;
+import NondeterministicFiniteAutomaton.NFA;
 import PushDownAutomaton.PDA;
+import TuringMachine.TM;
 import viewmodel.TestResultViewModel;
 
 /**
@@ -81,6 +83,90 @@ class TestServiceValidationTest {
             // Verify
             assertFalse(result.hasLimitViolation());
             assertEquals(4, result.getTotalTests());
+            assertTrue(result.getPassedTests() > 0);
+            assertNotNull(result.getDetailedReport());
+        }
+
+        @Test
+        @DisplayName("should return success ViewModel for NFA tests")
+        void testNfaSuccess() throws IOException {
+            // Create NFA that accepts strings containing 'a'
+            String nfaInput =
+                "start: q0\n" +
+                "finals: q1\n" +
+                "alphabet: a b\n" +
+                "states: q0 q1\n" +
+                "transitions:\n" +
+                "q0 -> q0 (a b)\n" +
+                "q0 -> q1 (a)\n" +
+                "q1 -> q1 (a b)\n";
+
+            NFA nfa = new NFA();
+            nfa.parse(nfaInput);
+
+            // Create test file in CSV format: input,expected (1=accept, 0=reject)
+            File testFile = createTestFile(
+                "a,1\n" +
+                "aa,1\n" +
+                "ba,1\n" +
+                "b,0\n"
+            );
+
+            // Create settings
+            SessionService.TestSettings settings = new SessionService.TestSettings(
+                0, 100, 30, null, null, null);
+
+            // Run tests
+            TestResultViewModel result = testService.runTestsWithValidation(
+                nfa, testFile.getAbsolutePath(), settings, null);
+
+            // Verify
+            assertFalse(result.hasLimitViolation());
+            assertEquals(4, result.getTotalTests());
+            assertTrue(result.getPassedTests() > 0);
+            assertNotNull(result.getDetailedReport());
+        }
+
+        @Test
+        @DisplayName("should return success ViewModel for TM tests")
+        void testTmSuccess() throws IOException {
+            // Create TM that accepts any input (immediately transitions to accept state)
+            String tmInput =
+                "start: q0\n" +
+                "accept: q_accept\n" +
+                "reject: q_reject\n" +
+                "tape_alphabet: a b _\n" +
+                "input_alphabet: a b\n" +
+                "states: q0 q_accept q_reject\n" +
+                "\n" +
+                "transitions:\n" +
+                "q0 a -> q_accept a R\n" +
+                "q0 b -> q_accept b R\n" +
+                "q0 _ -> q_accept _ R\n";
+
+            // TM.parse() returns a new TM in the ParseResult, doesn't update the original
+            TM tmTemplate = new TM();
+            common.ParseResult parseResult = tmTemplate.parse(tmInput);
+            assertTrue(parseResult.isSuccess(), "TM should parse successfully");
+            TM tm = (TM) parseResult.getAutomaton();
+
+            // Create test file in CSV format: input,expected (1=accept, 0=reject)
+            File testFile = createTestFile(
+                "a,1\n" +
+                "b,1\n"
+            );
+
+            // Create settings
+            SessionService.TestSettings settings = new SessionService.TestSettings(
+                0, 100, 30, null, null, null);
+
+            // Run tests
+            TestResultViewModel result = testService.runTestsWithValidation(
+                tm, testFile.getAbsolutePath(), settings, null);
+
+            // Verify
+            assertFalse(result.hasLimitViolation());
+            assertEquals(2, result.getTotalTests());
             assertTrue(result.getPassedTests() > 0);
             assertNotNull(result.getDetailedReport());
         }

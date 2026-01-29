@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -29,6 +30,7 @@ import service.FileService;
 import service.SessionService;
 import service.TestService;
 import service.VisualizationService;
+import viewmodel.TestResultViewModel;
 
 /**
  * Integration tests for AutomatonController.
@@ -357,6 +359,175 @@ class AutomatonControllerTest {
 
         Automaton dfa = defaultController.createAutomaton(MachineType.DFA);
         assertNotNull(dfa);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ViewModel Test Execution Tests
+    // ═══════════════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("ViewModel Test Execution")
+    class ViewModelTestExecutionTests {
+
+        // Valid CFG definition with 8 rules (S -> aB | bA, A -> a | aS | bAA, B -> b | bS | aBB)
+        private static final String CFG_WITH_MANY_RULES =
+            "Variables = S A B\n" +
+            "Terminals = a b\n" +
+            "Start = S\n" +
+            "\n" +
+            "S -> a B | b A\n" +
+            "A -> a | a S | b A A\n" +
+            "B -> b | b S | a B B\n";
+
+        // Valid PDA with 5 transitions
+        private static final String PDA_WITH_TRANSITIONS =
+            "states: q0 q1 q2 q3\n" +
+            "alphabet: a b\n" +
+            "stack_alphabet: a Z\n" +
+            "start: q0\n" +
+            "stack_start: Z\n" +
+            "finals: q3\n" +
+            "transitions:\n" +
+            "q0 a Z -> q1 aZ\n" +
+            "q0 a a -> q1 aa\n" +
+            "q1 b a -> q2 eps\n" +
+            "q2 b a -> q2 eps\n" +
+            "q2 eps Z -> q3 eps\n";
+
+        @Test
+        @DisplayName("runTestsWithViewModel returns success for DFA")
+        void testRunTestsWithViewModel_DFASuccess() throws Exception {
+            Automaton dfa = controller.createAutomaton(MachineType.DFA);
+            controller.parse(dfa, VALID_DFA);
+
+            // Create test file with CSV format: input,expected (1=accept, 0=reject)
+            File testFile = tempDir.resolve("test.test").toFile();
+            writeFile(testFile, "0,1\n1,0\n");
+
+            TestResultViewModel result = controller.runTestsWithViewModel(dfa, testFile.getAbsolutePath(), null);
+
+            assertNotNull(result);
+            assertFalse(result.hasLimitViolation());
+            assertEquals(2, result.getTotalTests());
+        }
+
+        @Test
+        @DisplayName("runTestsWithViewModel returns CFG violation when rules exceed limit")
+        void testRunTestsWithViewModel_CFGViolation() throws Exception {
+            Automaton cfg = controller.createAutomaton(MachineType.CFG);
+            controller.parse(cfg, CFG_WITH_MANY_RULES);
+
+            // Create test file
+            File testFile = tempDir.resolve("test.test").toFile();
+            writeFile(testFile, "ab,1\n");
+
+            // Set settings with max 3 rules (CFG has 8)
+            controller.setTestSettings(new SessionService.TestSettings(0, 100, 30, 3, null, null));
+
+            TestResultViewModel result = controller.runTestsWithViewModel(cfg, testFile.getAbsolutePath(), null);
+
+            assertNotNull(result);
+            assertTrue(result.hasLimitViolation());
+            assertEquals("CFG_RULES", result.getLimitViolationType());
+            assertEquals(0.0, result.getEarnedPoints());
+        }
+
+        @Test
+        @DisplayName("runTestsWithViewModel returns PDA violation when transitions exceed limit")
+        void testRunTestsWithViewModel_PDAViolation() throws Exception {
+            Automaton pda = controller.createAutomaton(MachineType.PDA);
+            controller.parse(pda, PDA_WITH_TRANSITIONS);
+
+            // Create test file
+            File testFile = tempDir.resolve("test.test").toFile();
+            writeFile(testFile, "ab,1\n");
+
+            // Set settings with max 2 transitions (PDA has 5)
+            controller.setTestSettings(new SessionService.TestSettings(0, 100, 30, null, 2, null));
+
+            TestResultViewModel result = controller.runTestsWithViewModel(pda, testFile.getAbsolutePath(), null);
+
+            assertNotNull(result);
+            assertTrue(result.hasLimitViolation());
+            assertEquals("PDA_TRANSITIONS", result.getLimitViolationType());
+            assertEquals(0.0, result.getEarnedPoints());
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Limit Validation Tests
+    // ═══════════════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("Limit Validation")
+    class LimitValidationTests {
+
+        @Test
+        @DisplayName("validateLimits returns CFG violation when rules exceed limit")
+        void testValidateLimits_CFGViolation() {
+            String cfgInput =
+                "Variables = S A B\n" +
+                "Terminals = a b\n" +
+                "Start = S\n" +
+                "\n" +
+                "S -> a B | b A\n" +
+                "A -> a | a S | b A A\n" +
+                "B -> b | b S | a B B\n";
+
+            Automaton cfg = controller.createAutomaton(MachineType.CFG);
+            controller.parse(cfg, cfgInput);
+
+            // Set settings with max 3 rules (CFG has 8)
+            controller.setTestSettings(new SessionService.TestSettings(0, 100, 30, 3, null, null));
+
+            ValidationMessage violation = controller.validateLimits(cfg);
+
+            assertNotNull(violation);
+            assertTrue(violation.getMessage().contains("CFG"));
+        }
+
+        @Test
+        @DisplayName("validateLimits returns PDA violation when transitions exceed limit")
+        void testValidateLimits_PDAViolation() {
+            String pdaInput =
+                "states: q0 q1 q2 q3\n" +
+                "alphabet: a b\n" +
+                "stack_alphabet: a Z\n" +
+                "start: q0\n" +
+                "stack_start: Z\n" +
+                "finals: q3\n" +
+                "transitions:\n" +
+                "q0 a Z -> q1 aZ\n" +
+                "q0 a a -> q1 aa\n" +
+                "q1 b a -> q2 eps\n" +
+                "q2 b a -> q2 eps\n" +
+                "q2 eps Z -> q3 eps\n";
+
+            Automaton pda = controller.createAutomaton(MachineType.PDA);
+            controller.parse(pda, pdaInput);
+
+            // Set settings with max 2 transitions (PDA has 5)
+            controller.setTestSettings(new SessionService.TestSettings(0, 100, 30, null, 2, null));
+
+            ValidationMessage violation = controller.validateLimits(pda);
+
+            assertNotNull(violation);
+            assertTrue(violation.getMessage().contains("PDA"));
+        }
+
+        @Test
+        @DisplayName("validateLimits returns null when within limits")
+        void testValidateLimits_NoViolation() {
+            Automaton dfa = controller.createAutomaton(MachineType.DFA);
+            controller.parse(dfa, VALID_DFA);
+
+            // Set permissive settings
+            controller.setTestSettings(new SessionService.TestSettings(0, 100, 30, 100, 100, null));
+
+            ValidationMessage violation = controller.validateLimits(dfa);
+
+            assertNull(violation);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════

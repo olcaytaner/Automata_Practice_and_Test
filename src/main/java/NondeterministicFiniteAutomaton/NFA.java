@@ -941,6 +941,14 @@ public class NFA extends Automaton {
         return transitions;
     }
 
+    /**
+     * Returns the total number of transitions in the NFA.
+     * @return the total transition count
+     */
+    public int getTransitionCount() {
+        return transitions.values().stream().mapToInt(List::size).sum();
+    }
+
     @Override
     public String getDefaultTemplate() {
         return "Start: q1\n" +

@@ -393,6 +393,15 @@ public class PDA extends Automaton {
     }
 
     /**
+     * Returns the set of states in this PDA.
+     *
+     * @return the set of states
+     */
+    public Set<State> getStates() {
+        return states != null ? Collections.unmodifiableSet(states) : Collections.emptySet();
+    }
+
+    /**
      * Validates the number of transitions against a maximum limit.
      *
      * @param maxTransitions the maximum allowed number of transitions

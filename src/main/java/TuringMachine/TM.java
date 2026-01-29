@@ -234,6 +234,14 @@ public class TM extends Automaton {
         return TMFileValidator.validateFromString(inputText);
     }
 
+    /**
+     * Returns the total number of transitions in the Turing Machine.
+     * @return the total transition count
+     */
+    public int getTransitionCount() {
+        return transitionFunction.size();
+    }
+
     @Override
     public String getDefaultTemplate() {
         return "start: q0\n" +
