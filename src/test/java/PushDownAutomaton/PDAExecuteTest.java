@@ -38,48 +38,48 @@ public class PDAExecuteTest {
         // Simple PDA that accepts balanced parentheses
         // Uses eps-pop to push without popping (stack grows)
         balancedParenthesesPDA = "states: q0 q2\n" +
-                                 "alphabet: ( )\n" +
-                                 "stack_alphabet: L Z\n" +
+                                 "input: ( )\n" +
+                                 "stack: L Z\n" +
                                  "start: q0\n" +
                                  "stack_start: Z\n" +
-                                 "finals: q2\n" +
+                                 "accept: q2\n" +
                                  "transitions:\n" +
-                                 "q0 ( eps -> q0 L\n" +
-                                 "q0 ) L -> q0 eps\n" +
-                                 "q0 eps Z -> q2 eps\n";
+                                 "q0, (, eps -> q0, L\n" +
+                                 "q0, ), L -> q0, eps\n" +
+                                 "q0, eps, Z -> q2, eps\n";
         
         // PDA that accepts a^n b^n (n >= 1)
         // Uses eps-pop to push without popping (stack grows)
         anbnPDA = "states: q0 q1 q2\n" +
-                  "alphabet: a b\n" +
-                  "stack_alphabet: A Z\n" +
+                  "input: a b\n" +
+                  "stack: A Z\n" +
                   "start: q0\n" +
                   "stack_start: Z\n" +
-                  "finals: q2\n" +
+                  "accept: q2\n" +
                   "transitions:\n" +
-                  "q0 a eps -> q0 A\n" +
-                  "q0 b A -> q1 eps\n" +
-                  "q1 b A -> q1 eps\n" +
-                  "q1 eps Z -> q2 eps\n";
+                  "q0, a, eps -> q0, A\n" +
+                  "q0, b, A -> q1, eps\n" +
+                  "q1, b, A -> q1, eps\n" +
+                  "q1, eps, Z -> q2, eps\n";
         
         // PDA for even-length palindromes over {a, b}
         // Uses eps-pop to push (first half), then pops to match (second half)
         // Nondeterministically guesses the middle
         palindromePDA = "states: q0 q1 q2\n" +
-                       "alphabet: a b\n" +
-                       "stack_alphabet: A B Z\n" +
+                       "input: a b\n" +
+                       "stack: A B Z\n" +
                        "start: q0\n" +
                        "stack_start: Z\n" +
-                       "finals: q2\n" +
+                       "accept: q2\n" +
                        "transitions:\n" +
-                       "q0 a eps -> q0 A\n" +
-                       "q0 b eps -> q0 B\n" +
-                       "q0 eps Z -> q1 Z\n" +
-                       "q0 eps A -> q1 A\n" +
-                       "q0 eps B -> q1 B\n" +
-                       "q1 a A -> q1 eps\n" +
-                       "q1 b B -> q1 eps\n" +
-                       "q1 eps Z -> q2 eps\n";
+                       "q0, a, eps -> q0, A\n" +
+                       "q0, b, eps -> q0, B\n" +
+                       "q0, eps, Z -> q1, Z\n" +
+                       "q0, eps, A -> q1, A\n" +
+                       "q0, eps, B -> q1, B\n" +
+                       "q1, a, A -> q1, eps\n" +
+                       "q1, b, B -> q1, eps\n" +
+                       "q1, eps, Z -> q2, eps\n";
     }
 
     @Nested
@@ -224,15 +224,15 @@ public class PDAExecuteTest {
         @DisplayName("Multiple epsilon transitions in sequence")
         void testMultipleEpsilonTransitions() {
             String pdaWithEpsilons = "states: q0 q1 q2 q3\n" +
-                                    "alphabet: a\n" +
-                                    "stack_alphabet: Z\n" +
+                                    "input: a\n" +
+                                    "stack: Z\n" +
                                     "start: q0\n" +
                                     "stack_start: Z\n" +
-                                    "finals: q3\n" +
+                                    "accept: q3\n" +
                                     "transitions:\n" +
-                                    "q0 eps Z -> q1 Z\n" +
-                                    "q1 eps Z -> q2 Z\n" +
-                                    "q2 eps Z -> q3 Z\n";
+                                    "q0, eps, Z -> q1, Z\n" +
+                                    "q1, eps, Z -> q2, Z\n" +
+                                    "q2, eps, Z -> q3, Z\n";
             
             pda.parse(pdaWithEpsilons);
             ExecutionResult result = pda.execute("");

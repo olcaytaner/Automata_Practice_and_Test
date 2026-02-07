@@ -30,35 +30,33 @@ Each section begins with a keyword and a colon. Lines may contain comments (`# .
 
 **Required sections**
 - `states:` space-separated state names
-- `alphabet:` space-separated input symbols (single chars)
-- `stack_alphabet:` space-separated stack symbols (single chars)
+- `input:` space-separated input symbols (single chars)
+- `stack:` space-separated stack symbols (single chars)
 - `start:` one state name
-- `stack_start:` one stack symbol (in `stack_alphabet`)
-- `finals:` space-separated accepting states
+- `stack_start:` one stack symbol (in `stack`)
+- `accept:` space-separated accepting states
 - `transitions:` one transition per line (see below)
 
-**Transitions**
-<fromState> <inputOrEps> <stackPopOrEps> -> <toState> <stackPushOrEps>
+**Transitions** (comma-separated Smart Text format)
+`fromState, inputOrEps, stackPopOrEps -> toState, stackPushOrEps`
 
-less
-Kodu kopyala
 - `eps` denotes epsilon (no input consumed / no stack pop)
 - `stackPushOrEps` may be a **string** over the stack alphabet (multi-character push), or `eps`.
 
 **Example**
 ```text
 states: q0 q1 q2
-alphabet: a b
-stack_alphabet: Z a
+input: a b
+stack: Z a
 start: q0
 stack_start: Z
-finals: q2
+accept: q2
 transitions:
-q0 a Z -> q0 aZ
-q0 a a -> q0 aa
-q0 b a -> q1 eps
-q1 b a -> q1 eps
-q1 eps Z -> q2 eps
+q0, a, Z -> q0, aZ
+q0, a, a -> q0, aa
+q0, b, a -> q1, eps
+q1, b, a -> q1, eps
+q1, eps, Z -> q2, eps
 
 ```
 

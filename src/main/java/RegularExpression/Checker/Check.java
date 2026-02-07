@@ -20,20 +20,37 @@ public class Check {
         RegularExpression re;
 
         String regex = null;
+        char[] alphabet = null;
         try (BufferedReader br = new BufferedReader(new FileReader(regexPath))) {
             String ln;
             while ((ln = br.readLine()) != null) {
-                if (!ln.trim().isEmpty()) {
-                    regex = ln.trim();
-                    break;
+                String trimmed = ln.trim();
+                if (trimmed.isEmpty() || trimmed.startsWith("#")) continue;
+
+                // Smart Text format: keyword: value
+                int colonIdx = trimmed.indexOf(":");
+                if (colonIdx != -1) {
+                    String keyword = trimmed.substring(0, colonIdx).trim().toLowerCase();
+                    String data = trimmed.substring(colonIdx + 1).trim();
+                    if ("pattern".equals(keyword) || "regex".equals(keyword)) {
+                        regex = data;
+                    } else if ("alphabet".equals(keyword) || "sigma".equals(keyword)) {
+                        String[] parts = data.split("\\s+");
+                        alphabet = new char[parts.length];
+                        for (int i = 0; i < parts.length; i++) {
+                            alphabet[i] = parts[i].charAt(0);
+                        }
+                    }
                 }
             }
             if (regex == null) {
-                System.err.println(regexPath + " is empty or contains only blank lines");
+                System.err.println(regexPath + " is missing 'pattern:' line");
                 return;
             }
 
-            char[] alphabet = extractAlphabetFromRegex(regex);
+            if (alphabet == null) {
+                alphabet = extractAlphabetFromRegex(regex);
+            }
             if (alphabet.length == 0) {
                 System.err.println("Warning: extracted alphabet is empty. Check the regex or provide an alphabet if needed.");
             }

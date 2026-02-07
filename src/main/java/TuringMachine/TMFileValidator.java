@@ -22,7 +22,7 @@ import common.ValidationMessage.ValidationMessageType;
 public class TMFileValidator {
 
     private static final Pattern STATE_NAME = Pattern.compile("q\\d+|q_accept|q_reject", Pattern.CASE_INSENSITIVE);
-    private static final Pattern TRANSITION_LINE = Pattern.compile("(\\S+)\\s+(\\S+)\\s*->\\s*(\\S+)\\s+(\\S+)\\s+([LR])");
+    private static final Pattern TRANSITION_LINE = Pattern.compile("\\s*(\\S+)\\s*,\\s*(\\S+)\\s*->\\s*(\\S+)\\s*,\\s*(\\S+)\\s*,\\s*([LR])\\s*");
 
     /**
      * Validates a Turing Machine definition file.
@@ -75,6 +75,12 @@ public class TMFileValidator {
             if (parts.length == 2) {
                 String header = parts[0].trim().toLowerCase();
                 String sectionContent = parts[1].trim();
+                // Normalize Smart Text keywords to internal keys
+                if (header.equals("input")) {
+                    header = "input_alphabet";
+                } else if (header.equals("tape")) {
+                    header = "tape_alphabet";
+                }
 
                 if (context.sectionLines.containsKey(header)) {
                     context.addMessage(ln, ValidationMessageType.ERROR, "DUPLICATE_SECTION", "Section '" + header + ":' is repeated.");
@@ -239,7 +245,7 @@ public class TMFileValidator {
                         context.addMessage(lineNumber, ValidationMessageType.ERROR, "INVALID_DIRECTION", "Only directions L and R are allowed");
                     }
                 } else {
-                    context.addMessage(lineNumber, ValidationMessageType.ERROR, "INVALID_TRANSITION_FORMAT", "Invalid format. Must be: state symbol -> state symbol direction");
+                    context.addMessage(lineNumber, ValidationMessageType.ERROR, "INVALID_TRANSITION_FORMAT", "Invalid format. Must be: state, symbol -> state, symbol, direction");
                 }
                 continue;
             }

@@ -1,2 +1,2 @@
-a(aa)*b(bb)*
-a b c
+alphabet: a b c
+pattern: a(aa)*b(bb)*

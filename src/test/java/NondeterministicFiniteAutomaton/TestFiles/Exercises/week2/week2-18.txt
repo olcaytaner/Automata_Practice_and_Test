@@ -1,26 +1,27 @@
 #week2-18
-Start: q0
-Finals: q11
-Alphabet: 0 1
-States: q0 q1 q2 q3 q4 q5 q6 q7 q8 q9 q10 q11
+states: q0 q1 q2 q3 q4 q5 q6 q7 q8 q9 q10 q11
+alphabet: 0 1
+start: q0
+accept: q11
 transitions:
-q0 -> q1 (eps)
-q0 -> q4 (eps)
-q0 -> q6 (eps)
-q0 -> q8 (eps)
+q0, eps -> q1
+q0, eps -> q4
+q0, eps -> q6
+q0, eps -> q8
 
-q1 -> q2 (0)
-q2 -> q3 (0)
-q3 -> q11 (1)
+q1, 0 -> q2
+q2, 0 -> q3
+q3, 1 -> q11
 
-q4 -> q5 (0)
-q5 -> q11 (1)
+q4, 0 -> q5
+q5, 1 -> q11
 
-q6 -> q7 (1)
-q7 -> q11 (0)
+q6, 1 -> q7
+q7, 0 -> q11
 
-q8 -> q9 (1)
-q9 -> q10 (1)
-q10 -> q11 (0)
+q8, 1 -> q9
+q9, 1 -> q10
+q10, 0 -> q11
 
-q11 -> q11 (0 1)
+q11, 0 -> q11
+q11, 1 -> q11

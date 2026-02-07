@@ -1,2 +1,2 @@
-(ba)*(ba u (a u bb)(a u b))b
-a b c
+alphabet: a b c
+pattern: (ba)*(ba u (a u bb)(a u b))b

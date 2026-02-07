@@ -60,13 +60,14 @@ class GraphvizEngineTest {
                         "alphabet: a b\n" +
                         "start: q0\n" +
                         "finals: q2\n" +
+                        "\n" +
                         "transitions:\n" +
-                        "q0 -> q1 (a)\n" +
-                        "q0 -> q1 (b)\n" +
-                        "q1 -> q2 (b)\n" +
-                        "q1 -> q1 (a)\n" +
-                        "q2 -> q0 (a)\n" +
-                        "q2 -> q2 (b)\n";
+                        "q0, a -> q1\n" +
+                        "q0, b -> q1\n" +
+                        "q1, b -> q2\n" +
+                        "q1, a -> q1\n" +
+                        "q2, a -> q0\n" +
+                        "q2, b -> q2\n";
 
         DFA dfa = new DFA();
 
@@ -102,12 +103,14 @@ class GraphvizEngineTest {
                 "states: q0 q1 q2 q3\n" +
                         "alphabet: a b\n" +
                         "start: q0\n" +
-                        "finals: q3\n" +
+                        "accept: q3\n" +
                         "transitions:\n" +
-                        "q0 -> q1 (a eps)\n" +
-                        "q1 -> q2 (b)\n" +
-                        "q2 -> q3 (eps)\n" +
-                        "q0 -> q3 (a b)\n";
+                        "q0, a -> q1\n" +
+                        "q0, eps -> q1\n" +
+                        "q1, b -> q2\n" +
+                        "q2, eps -> q3\n" +
+                        "q0, a -> q3\n" +
+                        "q0, b -> q3\n";
 
         NFA nfa = new NFA();
 

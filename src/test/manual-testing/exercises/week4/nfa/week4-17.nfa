@@ -1,19 +1,21 @@
 #week4-17
-Start: q0
-Finals: q5
-Alphabet: a b
-States: q0 q1 q2 q3 q4 q5
+states: q0 q1 q2 q3 q4 q5
+alphabet: a b
+start: q0
+accept: q5
 
-Transitions:
-q0 -> q1 (eps)
-q0 -> q2 (eps)
+transitions:
+q0, eps -> q1
+q0, eps -> q2
 
-q1-> q1 (a b)
-q1 -> q3 (a)
-q3 -> q3 (a b)
-q3 -> q5 (a)
+q1, a -> q1
+q1, b -> q1
+q1, a -> q3
+q3, a -> q3
+q3, b -> q3
+q3, a -> q5
 
-q2 -> q4 (b)
-q4 -> q5 (b)
+q2, b -> q4
+q4, b -> q5
 
-q5 -> q5 (b)
+q5, b -> q5

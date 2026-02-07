@@ -1,12 +1,13 @@
 #week2-10
-Start: q1
-Finals: q3
-Alphabet: a b
-States: q1 q2 q3
+states: q1 q2 q3
+alphabet: a b
+start: q1
+accept: q3
 transitions:
-q1 -> q1 (a b)
-q1 -> q2 (b)
-q2 -> q2 (a)
-q2 -> q3 (eps)
-q3 -> q3 (b)
-q3 -> q2 (b)
+q1, a -> q1
+q1, b -> q1
+q1, b -> q2
+q2, a -> q2
+q2, eps -> q3
+q3, b -> q3
+q3, b -> q2

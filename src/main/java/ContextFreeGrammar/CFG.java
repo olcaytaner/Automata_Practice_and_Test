@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import common.Automaton;
 import common.ExecutionResult;
+import common.InputNormalizer;
 import common.MachineType;
 import common.ParseResult;
 import common.Symbol;
@@ -227,82 +228,64 @@ public class CFG extends Automaton {
         Set<Terminal> terminals = new HashSet<>();
         NonTerminal startSymbol = null;
         List<Production> productions = new ArrayList<>();
-        int lineNumber = 0;
-        boolean variablesHeaderFound = false;
-        boolean terminalsHeaderFound = false;
 
-        try (BufferedReader reader = new BufferedReader(new StringReader(inputText))) {
-            String line;
+        InputNormalizer.NormalizedInput normalized = InputNormalizer.normalize(inputText, MachineType.CFG);
+        Map<String, List<String>> sections = normalized.getSections();
 
-            while ((line = reader.readLine()) != null) {
-                lineNumber++;
-
-                if (lineNumber > MAX_LINES) {
-                    throw new GrammarParseException("Input exceeds maximum line limit (" + MAX_LINES +
-                            " lines). Check for malformed production rules or infinite loops.");
-                }
-                line = normalizeWhitespace(line);
-                line = line.trim();
-
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-
-                try {
-                    if (line.toLowerCase().startsWith("variables =")) {
-                        variablesHeaderFound = true;
-                        String[] varNames = line.substring("Variables =".length()).trim().split("\\s+");
-                        if (varNames.length == 1 && varNames[0].isEmpty()) {
-                            throw new GrammarParseException("No variables specified");
-                        }
-                        for (String name : varNames) {
-                            if (!name.isEmpty()) {
-                                if (!name.equals(name.toUpperCase())) {
-                                    throw new GrammarParseException("Variable '" + name + "' must be uppercase");
-                                }
-                                variables.add(new NonTerminal(name));
-                            }
-                        }
-                    } else if (line.toLowerCase().startsWith("terminals =")) {
-                        terminalsHeaderFound = true;
-                        String[] termNames = line.substring("Terminals =".length()).trim().split("\\s+");
-                        if (termNames.length == 1 && termNames[0].isEmpty()) {
-                            throw new GrammarParseException("No terminals specified");
-                        }
-                        for (String name : termNames) {
-                            if (!name.isEmpty()) {
-                                if (!name.equals(name.toLowerCase())) {
-                                    throw new GrammarParseException("Terminal '" + name + "' must be lowercase");
-                                }
-                                terminals.add(new Terminal(name));
-                            }
-                        }
-                    } else if (line.toLowerCase().startsWith("start =")) {
-                        String startName = line.substring("Start =".length()).trim();
-                        if (startName.isEmpty()) {
-                            throw new GrammarParseException("No start symbol specified");
-                        }
-                        startSymbol = new NonTerminal(startName);
-                    } else if (line.contains("->")) {
-                        parseProduction(line, variables, terminals, productions);
-                    } else if (line.contains("->") == false && line.contains("-") && line.contains(">")) {
-                        throw new GrammarParseException("Arrow typo detected at line " + lineNumber + ": Did you mean '->'?");
-                    } else {
-                        throw new GrammarParseException("Unrecognized line format");
-                    }
-                } catch (GrammarParseException e) {
-                    throw new GrammarParseException("Error at line " + lineNumber + ": " + e.getMessage() + "\nLine content: " + line);
-                }
-            }
-        } catch (IOException e) {
-            throw new GrammarParseException("Error reading input: " + e.getMessage());
-        }
-
-        if (!variablesHeaderFound) {
+        // Extract variables
+        List<String> varNames = sections.get("variables");
+        if (varNames == null || varNames.isEmpty()) {
             throw new GrammarParseException("Variables missing");
         }
-        if (!terminalsHeaderFound) {
+        for (String name : varNames) {
+            if (!name.isEmpty()) {
+                if (!name.equals(name.toUpperCase())) {
+                    throw new GrammarParseException("Variable '" + name + "' must be uppercase");
+                }
+                variables.add(new NonTerminal(name));
+            }
+        }
+
+        // Extract terminals
+        List<String> termNames = sections.get("terminals");
+        if (termNames == null || termNames.isEmpty()) {
             throw new GrammarParseException("Terminals missing");
+        }
+        for (String name : termNames) {
+            if (!name.isEmpty()) {
+                if (!name.equals(name.toLowerCase())) {
+                    throw new GrammarParseException("Terminal '" + name + "' must be lowercase");
+                }
+                terminals.add(new Terminal(name));
+            }
+        }
+
+        // Extract start symbol
+        List<String> startList = sections.get("start");
+        if (startList == null || startList.isEmpty()) {
+            throw new GrammarParseException("No start symbol defined in the grammar");
+        }
+        String startName = startList.get(0).trim();
+        if (startName.isEmpty()) {
+            throw new GrammarParseException("No start symbol specified");
+        }
+        startSymbol = new NonTerminal(startName);
+
+        // Extract productions
+        List<String> productionLines = sections.get("productions");
+        if (productionLines == null || productionLines.isEmpty()) {
+            throw new GrammarParseException("No productions defined in the grammar");
+        }
+        for (String line : productionLines) {
+            String trimmed = normalizeWhitespace(line);
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                continue;
+            }
+            if (trimmed.contains("->")) {
+                parseProduction(trimmed, variables, terminals, productions);
+            } else if (trimmed.contains("-") && trimmed.contains(">")) {
+                throw new GrammarParseException("Arrow typo detected: Did you mean '->'? Line: " + trimmed);
+            }
         }
 
         if (variables.isEmpty()) {
@@ -310,9 +293,6 @@ public class CFG extends Automaton {
         }
         if (terminals.isEmpty()) {
             throw new GrammarParseException("No terminals defined in the grammar");
-        }
-        if (startSymbol == null) {
-            throw new GrammarParseException("No start symbol defined in the grammar");
         }
         if (productions.isEmpty()) {
             throw new GrammarParseException("No productions defined in the grammar");
@@ -1106,16 +1086,18 @@ public class CFG extends Automaton {
     }
 
     public void prettyPrint() {
-        System.out.println("Variables = " + variables.stream()
+        System.out.println("vars: " + variables.stream()
                 .map(NonTerminal::getName)
                 .collect(Collectors.joining(" ")));
 
-        System.out.println("Terminals = " + terminals.stream()
+        System.out.println("terminals: " + terminals.stream()
                 .map(Terminal::getName)
                 .collect(Collectors.joining(" ")));
 
-        System.out.println("Start = " + startSymbol.getName());
+        System.out.println("start: " + startSymbol.getName());
         System.out.println();
+
+        System.out.println("rules:");
 
         Map<NonTerminal, List<Production>> productionMap = productions.stream()
                 .collect(Collectors.groupingBy(Production::getLeft));
@@ -1148,18 +1130,20 @@ public class CFG extends Automaton {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("Variables = ").append(variables.stream()
+        sb.append("vars: ").append(variables.stream()
                         .map(NonTerminal::getName)
                         .collect(Collectors.joining(" ")))
                 .append("\n");
 
-        sb.append("Terminals = ").append(terminals.stream()
+        sb.append("terminals: ").append(terminals.stream()
                         .map(Terminal::getName)
                         .collect(Collectors.joining(" ")))
                 .append("\n");
 
-        sb.append("Start = ").append(startSymbol != null ? startSymbol.getName() : "undefined")
+        sb.append("start: ").append(startSymbol != null ? startSymbol.getName() : "undefined")
                 .append("\n\n");
+
+        sb.append("rules:\n");
 
         for (Production p : productions) {
             sb.append(p.getLeft().getName()).append(" -> ");
@@ -1177,10 +1161,11 @@ public class CFG extends Automaton {
 
     @Override
     public String getDefaultTemplate() {
-        return "Variables = S A B\n" +
-                "Terminals = a b\n" +
-                "Start = S\n" +
+        return "vars: S A B\n" +
+                "terminals: a b\n" +
+                "start: S\n" +
                 "\n" +
+                "rules:\n" +
                 "S -> A B\n" +
                 "A -> a\n" +
                 "B -> b\n";

@@ -1,17 +1,17 @@
 states: q0 q1 q2 q3 q4 q5 q6 q7
-alphabet: a b c
-stack_alphabet: Z  1
+input: a b c
+stack: Z  1
 start: q0
 stack_start: eps
-finals: q7
+accept: q7
 transitions:
-q0 eps eps -> q1 Z
-q1 a eps -> q1 1
-q1 eps  eps -> q2 eps
-q2 b eps -> q3 eps
-q3 c eps -> q4 eps
-q4 b eps -> q5 eps
-q5 c eps -> q2 1
-q2 eps eps ->q6 eps
-q6 a 1 -> q6 eps
-q6 eps Z ->q7 eps
+q0, eps, eps -> q1, Z
+q1, a, eps -> q1, 1
+q1, eps, eps -> q2, eps
+q2, b, eps -> q3, eps
+q3, c, eps -> q4, eps
+q4, b, eps -> q5, eps
+q5, c, eps -> q2, 1
+q2, eps, eps -> q6, eps
+q6, a, 1 -> q6, eps
+q6, eps, Z -> q7, eps

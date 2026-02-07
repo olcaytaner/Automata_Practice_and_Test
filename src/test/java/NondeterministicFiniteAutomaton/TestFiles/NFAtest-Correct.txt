@@ -1,8 +1,12 @@
-Start: q1
-Finals: q2 q3
-Alphabet: a b c
+states:
+alphabet: a b c
+start: q1
+accept: q2 q3
 transitions:
-q1 -> q2 (a eps)
-q3 -> q1 (a)
-q2 -> q2 (a c)
-q2 -> q3 (b c)
+q1, a -> q2
+q1, eps -> q2
+q3, a -> q1
+q2, a -> q2
+q2, c -> q2
+q2, b -> q3
+q2, c -> q3

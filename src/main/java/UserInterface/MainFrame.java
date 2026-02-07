@@ -316,62 +316,66 @@ public class MainFrame extends JFrame {
             "<h2>Automaton Syntax Reference</h2>" +
 
             "<h3>1. DFA (Deterministic Finite Automaton)</h3>" +
-            "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>Start: q0\n" +
-            "Finals: q0\n" +
-            "Alphabet: a b\n" +
-            "States: q0\n" +
+            "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>states: q0\n" +
+            "alphabet: a b\n" +
+            "start: q0\n" +
+            "accept: q0\n" +
             "\n" +
-            "Transitions:\n" +
-            "q0 -> q0 (a b)</pre>" +
+            "transitions:\n" +
+            "q0, a -> q0\n" +
+            "q0, b -> q0</pre>" +
 
             "<h3>2. NFA (Nondeterministic Finite Automaton)</h3>" +
-            "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>Start: q1\n" +
-            "Finals: q2\n" +
-            "Alphabet: a b\n" +
-            "States: q1 q2\n" +
+            "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>states: q1 q2\n" +
+            "alphabet: a b\n" +
+            "start: q1\n" +
+            "accept: q2\n" +
             "\n" +
-            "Transitions:\n" +
-            "q1 -> q2 (a b eps)\n" +
-            "q2 -> q2 (a b)</pre>" +
+            "transitions:\n" +
+            "q1, a -> q2\n" +
+            "q1, b -> q2\n" +
+            "q1, eps -> q2\n" +
+            "q2, a -> q2\n" +
+            "q2, b -> q2</pre>" +
 
             "<h3>3. PDA (Pushdown Automaton)</h3>" +
             "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>states: q0 q1\n" +
-                    "alphabet: a b\n" +
-                    "stack_alphabet: Z\n" +
-                    "start: q0\n" +
-                    "stack_start: Z\n" +
-                    "finals: q1\n" +
-                    "\n" +
-                    "transitions:\n" +
-                    "q0 a Z -> q1 eps\n" +
-                    "q0 b Z -> q1 eps\n"+
-
-            "<h3>4. TM (Turing Machine)</h3>" +
-            "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>start: q0\n" +
-            "accept: q_accept\n" +
-            "reject: q_reject\n" +
-            "alphabet: a b\n" +
-            "tape_alphabet: a b _\n" +
-            "input_alphabet: a b _\n" +
-            "states: q0 q_accept q_reject\n" +
+            "input: a b\n" +
+            "stack: Z\n" +
+            "start: q0\n" +
+            "stack_start: Z\n" +
+            "accept: q1\n" +
             "\n" +
             "transitions:\n" +
-            "q0 a -> q_accept a R\n" +
-            "q0 b -> q_accept b R\n" +
-            "q0 _ -> q_accept _ R</pre>" +
+            "q0, a, Z -> q1, eps\n" +
+            "q0, b, Z -> q1, eps</pre>" +
+
+            "<h3>4. TM (Turing Machine)</h3>" +
+            "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>states: q0 q_accept q_reject\n" +
+            "input: a b\n" +
+            "tape: a b _\n" +
+            "start: q0\n" +
+            "accept: q_accept\n" +
+            "reject: q_reject\n" +
+            "\n" +
+            "transitions:\n" +
+            "q0, a -> q_accept, a, R\n" +
+            "q0, b -> q_accept, b, R\n" +
+            "q0, _ -> q_accept, _, R</pre>" +
 
             "<h3>5. CFG (Context-Free Grammar)</h3>" +
-            "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>Variables = S A B\n" +
-            "Terminals = a b\n" +
-            "Start = S\n" +
+            "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>vars: S A B\n" +
+            "terminals: a b\n" +
+            "start: S\n" +
             "\n" +
+            "rules:\n" +
             "S -> A B\n" +
             "A -> a\n" +
             "B -> b</pre>" +
 
             "<h3>6. REGEX (Regular Expression)</h3>" +
-            "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>a*b(c u d)\n" +
-            "a b c d</pre>" +
+            "<pre style='background: #f5f5f5; padding: 5px; margin-left: 0; font-family: monospace;'>alphabet: a b c d\n" +
+            "pattern: a*b(c u d)</pre>" +
 
             "</body></html>";
 

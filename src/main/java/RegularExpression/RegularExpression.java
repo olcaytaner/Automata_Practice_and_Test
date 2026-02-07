@@ -76,7 +76,7 @@ public class RegularExpression extends Automaton {
 
     @Override
     public String getDefaultTemplate() {
-        return "a*b(c u d)\na b c d\n";
+        return "alphabet: a b c d\npattern: a*b(c u d)\n";
     }
 
     /**

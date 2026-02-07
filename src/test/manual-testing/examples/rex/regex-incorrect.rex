@@ -1,2 +1,2 @@
-((a u b)* c (a u b)* c (a u b)*)
-a b c
+alphabet: a b c
+pattern: ((a u b)* c (a u b)* c (a u b)*)

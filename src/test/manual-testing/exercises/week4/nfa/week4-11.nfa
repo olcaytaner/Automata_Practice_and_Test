@@ -1,13 +1,13 @@
 #week4-11
-Start: q1
-Finals: q4
-Alphabet: a b
-States: q1 q2 q3 q4 q5
+states: q1 q2 q3 q4 q5
+alphabet: a b
+start: q1
+accept: q4
 transitions:
-q1 -> q1 (a)
-q1 -> q2 (b)
-q2 -> q3 (a)
-q2 -> q5 (b)
-q3 -> q4 (b)
-q5 -> q4 (a)
-q4 -> q2 (a)
+q1, a -> q1
+q1, b -> q2
+q2, a -> q3
+q2, b -> q5
+q3, b -> q4
+q5, a -> q4
+q4, a -> q2

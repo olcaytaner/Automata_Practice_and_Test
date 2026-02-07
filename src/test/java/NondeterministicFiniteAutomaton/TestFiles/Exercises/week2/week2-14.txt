@@ -1,10 +1,10 @@
 #week2-14
-Start: q0
-Finals: q2
-Alphabet: a b
-States: q0 q1 q2
+states: q0 q1 q2
+alphabet: a b
+start: q0
+accept: q2
 transitions:
-q0 -> q1 (a)
-q1 -> q2 (a)
-q2 -> q2 (a)
-q2 -> q0 (b)
+q0, a -> q1
+q1, a -> q2
+q2, a -> q2
+q2, b -> q0

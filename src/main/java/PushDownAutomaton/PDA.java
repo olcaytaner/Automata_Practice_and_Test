@@ -66,9 +66,9 @@ public class PDA extends Automaton {
      * Parse a PDA definition text into internal structures.
      *
      * <p>Expected sections: {@code states, alphabet, stack_alphabet, start, stack_start, finals, transitions}.
-     * Transitions use the format:
+     * Transitions use comma-separated Smart Text format:
      * <pre>
-     *   fromState inputOrEps stackPopOrEps -> toState stackPushOrEps
+     *   fromState, inputOrEps, stackPopOrEps -> toState, stackPushOrEps
      * </pre>
      * where {@code eps} denotes epsilon; {@code stackPushOrEps} may be a multi-character string or {@code eps}.</p>
      *
@@ -524,8 +524,8 @@ public class PDA extends Automaton {
                 continue;
             }
 
-            String[] left = parts[0].trim().split("\\s+");
-            String[] right = parts[1].trim().split("\\s+");
+            String[] left = parts[0].trim().split("\\s*,\\s*");
+            String[] right = parts[1].trim().split("\\s*,\\s*");
 
             if (left.length != 3) {
                 messages.add(new ValidationMessage("Left side of transition must have 3 components: state, input, stack_pop.", currentLine, ValidationMessageType.ERROR));
@@ -655,15 +655,15 @@ public class PDA extends Automaton {
      */
     public String getDefaultTemplate() {
         return "states: q0 q1\n" +
-                "alphabet: a b\n" +
-                "stack_alphabet: Z\n" +
+                "input: a b\n" +
+                "stack: Z\n" +
                 "start: q0\n" +
                 "stack_start: eps\n" +
-                "finals: q1\n" +
+                "accept: q1\n" +
                 "\n" +
                 "transitions:\n" +
-                "q0 eps eps -> q1 Z\n" +
-                "q1 a Z -> q1 eps\n" +
-                "q1 b Z -> q1 eps\n";
+                "q0, eps, eps -> q1, Z\n" +
+                "q1, a, Z -> q1, eps\n" +
+                "q1, b, Z -> q1, eps\n";
     }
 }

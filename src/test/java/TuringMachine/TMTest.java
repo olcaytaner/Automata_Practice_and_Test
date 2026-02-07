@@ -43,26 +43,26 @@ public class TMTest {
         tm = new TM(null, null, null, null, null, null, null);
         
         // Valid TM content for testing
-        validTMContent = "states:q0 q1 q_accept q_reject\n" +
-                        "input_alphabet: 0 1\n" +
-                        "REJECT: q_reject\n" +
-                        "accept: q_accept\n" +
+        validTMContent = "states: q0 q1 q_accept q_reject\n" +
+                        "input: 0 1\n" +
+                        "tape: 0 1 _\n" +
                         "start: q0\n" +
-                        "tape_alphabet: 0 1 _\n" +
+                        "accept: q_accept\n" +
+                        "reject: q_reject\n" +
                         "\n" +
                         "transitions:\n" +
-                        "q0 0 -> q1 0 R\n" +
-                        "q0 1 -> q0 1 R\n" +
-                        "q0 _ -> q_accept _ R\n" +
-                        "q1 0 -> q0 0 R\n" +
-                        "q1 1 -> q1 1 R\n";
+                        "q0, 0 -> q1, 0, R\n" +
+                        "q0, 1 -> q0, 1, R\n" +
+                        "q0, _ -> q_accept, _, R\n" +
+                        "q1, 0 -> q0, 0, R\n" +
+                        "q1, 1 -> q1, 1, R\n";
         
         // Invalid TM content (missing transitions)
-        invalidTMContent = "states:q0 q1 q_accept q_reject\n" +
-                          "input_alphabet: 0 1\n" +
+        invalidTMContent = "states: q0 q1 q_accept q_reject\n" +
+                          "input: 0 1\n" +
+                          "tape: 0 1 _\n" +
                           "accept: q_accept\n" +
-                          "start: q0\n" +
-                          "tape_alphabet: 0 1 _\n";
+                          "start: q0\n";
     }
 
     @Nested

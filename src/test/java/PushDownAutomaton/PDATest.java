@@ -42,25 +42,25 @@ public class PDATest {
         
         // Valid PDA content for testing
         validPDAContent = "states: q0 q1 q2 q3\n" +
-                         "alphabet: a b\n" +
-                         "stack_alphabet: a Z\n" +
+                         "input: a b\n" +
+                         "stack: a Z\n" +
                          "start: q0\n" +
                          "stack_start: Z\n" +
-                         "finals: q3\n" +
+                         "accept: q3\n" +
                          "transitions:\n" +
-                         "q0 a Z -> q1 aZ\n" +
-                         "q0 a a -> q1 aa\n" +
-                         "q1 b a -> q2 eps\n" +
-                         "q2 b a -> q2 eps\n" +
-                         "q2 eps Z -> q3 eps\n";
+                         "q0, a, Z -> q1, aZ\n" +
+                         "q0, a, a -> q1, aa\n" +
+                         "q1, b, a -> q2, eps\n" +
+                         "q2, b, a -> q2, eps\n" +
+                         "q2, eps, Z -> q3, eps\n";
         
         // Invalid PDA content (missing stack alphabet)
         invalidPDAContent = "states: q0 q1 q2 q3\n" +
-                           "alphabet: a b\n" +
+                           "input: a b\n" +
                            "start: q0\n" +
-                           "finals: q3\n" +
+                           "accept: q3\n" +
                            "transitions:\n" +
-                           "q0 a Z -> q1 aZ\n";
+                           "q0, a, Z -> q1, aZ\n";
     }
 
     @Nested

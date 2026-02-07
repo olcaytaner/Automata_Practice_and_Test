@@ -1,6 +1,7 @@
-Variables = S
-Terminals = 0 1
-Start = S
+vars: S
+terminals: 0 1
+start: S
 #comment
 
+rules:
 S -> 0 S 1 | _

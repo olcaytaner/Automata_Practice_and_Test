@@ -466,26 +466,21 @@ public class DFA extends Automaton {
     // Map to track transitions by fromState and symbol
     Map<State, Map<Symbol, State>> transitionMap = new HashMap<>();
 
+    // Smart Text format: fromState, symbol -> toState
+    Pattern transitionPattern = Pattern.compile(
+      "^\\s*(\\w+)\\s*,\\s*(\\S+)\\s*->\\s*(\\w+)\\s*$"
+    );
+
     for (int i = 0; i < lines.size(); i++) {
       int currentLine = startLine + i + 1;
       String line = lines.get(i);
-
-      String[] parts = line.split("->");
-      if (parts.length != 2) {
-        messages.add(new ValidationMessage("Invalid transition format. Rule must contain '->' separator.", currentLine, ValidationMessage.ValidationMessageType.ERROR));
-        continue;
-      }
-
-      Pattern transitionPattern = Pattern.compile(
-        "^\\s*(\\w+)\\s*->\\s*(\\w+)\\s*\\(\\s*([a-zA-Z0-9]+(?:\\s+[a-zA-Z0-9]+)*)\\s*\\)\\s*$"
-      );
 
       Matcher matcher = transitionPattern.matcher(line);
 
       if (matcher.matches()) {
         String fromName = matcher.group(1);
-        String toName = matcher.group(2);
-        String[] symbols = matcher.group(3).trim().split("\\s+");
+        String symStr = matcher.group(2);
+        String toName = matcher.group(3);
 
         State from = validateState(fromName, stateMap, currentLine, messages);
         State to = validateState(toName, stateMap, currentLine, messages);
@@ -493,32 +488,30 @@ public class DFA extends Automaton {
           continue; // Skip if state validation failed
         }
 
-        for (String symStr : symbols) {
-          Symbol sym = validateSymbol(new Symbol(symStr.charAt(0)), this.alphabet, currentLine, messages);
-          if (sym == null) {
-            continue; // Skip if symbol validation failed
-          }
-
-          // Check for duplicate transitions
-          if (transitionMap.containsKey(from) && transitionMap.get(from).containsKey(sym)) {
-            State existingToState = transitionMap.get(from).get(sym);
-            messages.add(new ValidationMessage(
-              String.format("Multiple transitions from state '%s' with symbol '%s' (to '%s' and '%s'). A DFA must have exactly one transition per symbol per state.",
-                from.getName(), sym, existingToState.getName(), to.getName()),
-              currentLine,
-              ValidationMessage.ValidationMessageType.ERROR
-            ));
-            continue;
-          }
-
-          // Add to transition map for duplicate checking
-          transitionMap.computeIfAbsent(from, k -> new HashMap<>()).put(sym, to);
-
-          // Add to the final transition set
-          transitionSet.add(new FSATransition(from, sym, to));
+        Symbol sym = validateSymbol(new Symbol(symStr.charAt(0)), this.alphabet, currentLine, messages);
+        if (sym == null) {
+          continue; // Skip if symbol validation failed
         }
+
+        // Check for duplicate transitions
+        if (transitionMap.containsKey(from) && transitionMap.get(from).containsKey(sym)) {
+          State existingToState = transitionMap.get(from).get(sym);
+          messages.add(new ValidationMessage(
+            String.format("Multiple transitions from state '%s' with symbol '%s' (to '%s' and '%s'). A DFA must have exactly one transition per symbol per state.",
+              from.getName(), sym, existingToState.getName(), to.getName()),
+            currentLine,
+            ValidationMessage.ValidationMessageType.ERROR
+          ));
+          continue;
+        }
+
+        // Add to transition map for duplicate checking
+        transitionMap.computeIfAbsent(from, k -> new HashMap<>()).put(sym, to);
+
+        // Add to the final transition set
+        transitionSet.add(new FSATransition(from, sym, to));
       } else {
-        messages.add(new ValidationMessage("Invalid transition format.", currentLine, ValidationMessage.ValidationMessageType.ERROR));
+        messages.add(new ValidationMessage("Invalid transition format. Expected: fromState, symbol -> toState", currentLine, ValidationMessage.ValidationMessageType.ERROR));
       }
     }
 
@@ -740,12 +733,13 @@ public class DFA extends Automaton {
 
   @Override
   public String getDefaultTemplate() {
-    return "Start: q0\n" +
-           "Finals: q0\n" +
-           "Alphabet: a b\n" +
-           "States: q0\n" +
+    return "states: q0\n" +
+           "alphabet: a b\n" +
+           "start: q0\n" +
+           "accept: q0\n" +
            "\n" +
-           "Transitions:\n" +
-           "q0 -> q0 (a b)\n";
+           "transitions:\n" +
+           "q0, a -> q0\n" +
+           "q0, b -> q0\n";
   }
 }

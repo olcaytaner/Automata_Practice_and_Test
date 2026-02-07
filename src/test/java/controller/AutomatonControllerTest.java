@@ -45,16 +45,16 @@ class AutomatonControllerTest {
 
     // Valid DFA definition
     private static final String VALID_DFA =
-        "Start: q0\n" +
-        "Finals: q1\n" +
-        "Alphabet: 0 1\n" +
-        "States: q0 q1\n" +
+        "states: q0 q1\n" +
+        "alphabet: 0 1\n" +
+        "start: q0\n" +
+        "accept: q1\n" +
         "\n" +
-        "Transitions:\n" +
-        "q0 -> q1 (0)\n" +
-        "q0 -> q0 (1)\n" +
-        "q1 -> q1 (0)\n" +
-        "q1 -> q0 (1)";
+        "transitions:\n" +
+        "q0, 0 -> q1\n" +
+        "q0, 1 -> q0\n" +
+        "q1, 0 -> q1\n" +
+        "q1, 1 -> q0";
 
     @BeforeEach
     void setUp() {
@@ -371,10 +371,11 @@ class AutomatonControllerTest {
 
         // Valid CFG definition with 8 rules (S -> aB | bA, A -> a | aS | bAA, B -> b | bS | aBB)
         private static final String CFG_WITH_MANY_RULES =
-            "Variables = S A B\n" +
-            "Terminals = a b\n" +
-            "Start = S\n" +
+            "vars: S A B\n" +
+            "terminals: a b\n" +
+            "start: S\n" +
             "\n" +
+            "rules:\n" +
             "S -> a B | b A\n" +
             "A -> a | a S | b A A\n" +
             "B -> b | b S | a B B\n";
@@ -382,17 +383,17 @@ class AutomatonControllerTest {
         // Valid PDA with 5 transitions
         private static final String PDA_WITH_TRANSITIONS =
             "states: q0 q1 q2 q3\n" +
-            "alphabet: a b\n" +
-            "stack_alphabet: a Z\n" +
+            "input: a b\n" +
+            "stack: a Z\n" +
             "start: q0\n" +
             "stack_start: Z\n" +
-            "finals: q3\n" +
+            "accept: q3\n" +
             "transitions:\n" +
-            "q0 a Z -> q1 aZ\n" +
-            "q0 a a -> q1 aa\n" +
-            "q1 b a -> q2 eps\n" +
-            "q2 b a -> q2 eps\n" +
-            "q2 eps Z -> q3 eps\n";
+            "q0, a, Z -> q1, aZ\n" +
+            "q0, a, a -> q1, aa\n" +
+            "q1, b, a -> q2, eps\n" +
+            "q2, b, a -> q2, eps\n" +
+            "q2, eps, Z -> q3, eps\n";
 
         @Test
         @DisplayName("runTestsWithViewModel returns success for DFA")
@@ -466,10 +467,11 @@ class AutomatonControllerTest {
         @DisplayName("validateLimits returns CFG violation when rules exceed limit")
         void testValidateLimits_CFGViolation() {
             String cfgInput =
-                "Variables = S A B\n" +
-                "Terminals = a b\n" +
-                "Start = S\n" +
+                "vars: S A B\n" +
+                "terminals: a b\n" +
+                "start: S\n" +
                 "\n" +
+                "rules:\n" +
                 "S -> a B | b A\n" +
                 "A -> a | a S | b A A\n" +
                 "B -> b | b S | a B B\n";
@@ -491,17 +493,17 @@ class AutomatonControllerTest {
         void testValidateLimits_PDAViolation() {
             String pdaInput =
                 "states: q0 q1 q2 q3\n" +
-                "alphabet: a b\n" +
-                "stack_alphabet: a Z\n" +
+                "input: a b\n" +
+                "stack: a Z\n" +
                 "start: q0\n" +
                 "stack_start: Z\n" +
-                "finals: q3\n" +
+                "accept: q3\n" +
                 "transitions:\n" +
-                "q0 a Z -> q1 aZ\n" +
-                "q0 a a -> q1 aa\n" +
-                "q1 b a -> q2 eps\n" +
-                "q2 b a -> q2 eps\n" +
-                "q2 eps Z -> q3 eps\n";
+                "q0, a, Z -> q1, aZ\n" +
+                "q0, a, a -> q1, aa\n" +
+                "q1, b, a -> q2, eps\n" +
+                "q2, b, a -> q2, eps\n" +
+                "q2, eps, Z -> q3, eps\n";
 
             Automaton pda = controller.createAutomaton(MachineType.PDA);
             controller.parse(pda, pdaInput);

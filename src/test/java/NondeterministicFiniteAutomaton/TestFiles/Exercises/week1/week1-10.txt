@@ -1,18 +1,18 @@
 #week1-10
-Start: q0
-Finals: q2
-Alphabet: a b c
-States: q0 q1 q2 q3
+states: q0 q1 q2 q3
+alphabet: a b c
+start: q0
+accept: q2
 transitions:
-q0 -> q1 (a)
-q0 -> q2 (b)
-q0 -> q3 (c)
-q1 -> q0 (c)
-q1 -> q2 (a)
-q1 -> q3 (b)
-q2 -> q1 (c)
-q2 -> q0 (b)
-q2 -> q3 (a)
-q3 -> q0 (a)
-q3 -> q1 (b)
-q3 -> q2 (c)
+q0, a -> q1
+q0, b -> q2
+q0, c -> q3
+q1, c -> q0
+q1, a -> q2
+q1, b -> q3
+q2, c -> q1
+q2, b -> q0
+q2, a -> q3
+q3, a -> q0
+q3, b -> q1
+q3, c -> q2

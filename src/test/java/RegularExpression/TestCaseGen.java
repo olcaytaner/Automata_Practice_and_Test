@@ -22,13 +22,27 @@ public class TestCaseGen {
                 if (f.getName().endsWith(".rex")) {
 
                     try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-                        String regex = br.readLine();
+                        String regex = null;
+                        char[] alphabet = null;
+                        String ln;
+                        while ((ln = br.readLine()) != null) {
+                            String trimmed = ln.trim();
+                            if (trimmed.isEmpty() || trimmed.startsWith("#")) continue;
+                            int colonIdx = trimmed.indexOf(":");
+                            if (colonIdx != -1) {
+                                String keyword = trimmed.substring(0, colonIdx).trim().toLowerCase();
+                                String data = trimmed.substring(colonIdx + 1).trim();
+                                if ("pattern".equals(keyword) || "regex".equals(keyword)) {
+                                    regex = data;
+                                } else if ("alphabet".equals(keyword) || "sigma".equals(keyword)) {
+                                    String[] parts = data.split("\\s+");
+                                    alphabet = new char[parts.length];
+                                    for (int i = 0; i < parts.length; i++)
+                                        alphabet[i] = parts[i].charAt(0);
+                                }
+                            }
+                        }
                         System.out.println(regex);
-                        String[] alphabet_ = br.readLine().split(" ");
-
-                        char[] alphabet = new char[alphabet_.length];
-                        for (int i = 0; i < alphabet_.length; ++i)
-                                alphabet[i] = alphabet_[i].charAt(0);
 
                         RegularExpression re = new RegularExpression(regex, alphabet);
 

@@ -109,16 +109,16 @@ class AutomatonServiceTest {
     @DisplayName("parse returns result for valid DFA")
     void parse_validDFA() {
         String validDFA =
-            "Start: q0\n" +
-            "Finals: q1\n" +
-            "Alphabet: 0 1\n" +
-            "States: q0 q1\n" +
+            "states: q0 q1\n" +
+            "alphabet: 0 1\n" +
+            "start: q0\n" +
+            "accept: q1\n" +
             "\n" +
-            "Transitions:\n" +
-            "q0 -> q1 (0)\n" +
-            "q0 -> q0 (1)\n" +
-            "q1 -> q1 (0)\n" +
-            "q1 -> q0 (1)";
+            "transitions:\n" +
+            "q0, 0 -> q1\n" +
+            "q0, 1 -> q0\n" +
+            "q1, 0 -> q1\n" +
+            "q1, 1 -> q0";
 
         Automaton dfa = service.createAutomaton(MachineType.DFA);
         ParseResult result = service.parse(dfa, validDFA);
@@ -250,16 +250,16 @@ class AutomatonServiceTest {
     @DisplayName("isParsed returns true for valid automaton")
     void isParsed_validAutomaton() {
         String validDFA =
-            "Start: q0\n" +
-            "Finals: q1\n" +
-            "Alphabet: 0 1\n" +
-            "States: q0 q1\n" +
+            "states: q0 q1\n" +
+            "alphabet: 0 1\n" +
+            "start: q0\n" +
+            "accept: q1\n" +
             "\n" +
-            "Transitions:\n" +
-            "q0 -> q1 (0)\n" +
-            "q0 -> q0 (1)\n" +
-            "q1 -> q1 (0)\n" +
-            "q1 -> q0 (1)";
+            "transitions:\n" +
+            "q0, 0 -> q1\n" +
+            "q0, 1 -> q0\n" +
+            "q1, 0 -> q1\n" +
+            "q1, 1 -> q0";
 
         Automaton dfa = service.createAutomaton(MachineType.DFA);
         assertTrue(service.isParsed(dfa, validDFA));

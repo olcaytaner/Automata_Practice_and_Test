@@ -1,11 +1,12 @@
 #week3-4
-Start: q0
-Finals: q0 q4
-Alphabet: 0 1
-States: q0 q1 q2 q3 q4
+states: q0 q1 q2 q3 q4
+alphabet: 0 1
+start: q0
+accept: q0 q4
 transitions:
-q0 -> q1 (eps)
-q1 -> q2 (1)
-q2 -> q3 (0 1)
-q3 -> q4 (1)
-q4 -> q1 (eps)
+q0, eps -> q1
+q1, 1 -> q2
+q2, 0 -> q3
+q2, 1 -> q3
+q3, 1 -> q4
+q4, eps -> q1

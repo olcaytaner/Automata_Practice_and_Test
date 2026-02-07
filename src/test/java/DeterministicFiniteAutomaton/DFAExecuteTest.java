@@ -458,15 +458,16 @@ public class DFAExecuteTest {
         @Test
         @DisplayName("Execute on parsed DFA")
         void testExecuteOnParsedDFA() {
-            String dfaDefinition = "Start: q0\n" +
-                                  "Finals: q1\n" +
-                                  "Alphabet: a b\n" +
-                                  "States: q0 q1\n" +
-                                  "Transitions:\n" +
-                                  "q0 -> q1 (a)\n" +
-                                  "q0 -> q0 (b)\n" +
-                                  "q1 -> q1 (a)\n" +
-                                  "q1 -> q0 (b)\n";
+            String dfaDefinition = "states: q0 q1\n" +
+                                  "alphabet: a b\n" +
+                                  "start: q0\n" +
+                                  "accept: q1\n" +
+                                  "\n" +
+                                  "transitions:\n" +
+                                  "q0, a -> q1\n" +
+                                  "q0, b -> q0\n" +
+                                  "q1, a -> q1\n" +
+                                  "q1, b -> q0\n";
             
             DFA parsedDFA = new DFA();
             ParseResult parseResult = parsedDFA.parse(dfaDefinition);

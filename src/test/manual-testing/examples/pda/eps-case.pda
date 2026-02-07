@@ -1,12 +1,12 @@
 states: q0 q1 q2
-alphabet: a b
-stack_alphabet: Z a
+input: a b
+stack: Z a
 start: q0
 stack_start: Z
-finals: q2
+accept: q2
 transitions:
-q0 a Z -> q0 aZ
-q0 a a -> q0 aa
-q0 b a -> q1 eps
-q1 b a -> q1 eps
-q1 eps Z -> q2 eps
+q0, a, Z -> q0, aZ
+q0, a, a -> q0, aa
+q0, b, a -> q1, eps
+q1, b, a -> q1, eps
+q1, eps, Z -> q2, eps

@@ -1,22 +1,30 @@
 #week3-5
-Start: q0
-Finals: q0 q5 q8
-Alphabet: a b c
-States: q0 q1 q2 q3 q4 q5 q6 q7 q8
+states: q0 q1 q2 q3 q4 q5 q6 q7 q8
+alphabet: a b c
+start: q0
+accept: q0 q5 q8
 transitions:
-q0 -> q1 (eps)
+q0, eps -> q1
 
-q1 -> q2 (eps)
-q2 -> q3 (a)
-q3 -> q3 (a b c)
-q3 -> q4 (eps)
-q4 -> q4 (a b c)
-q4 -> q5 (b)
-q5 -> q1 (eps)
+q1, eps -> q2
+q2, a -> q3
+q3, a -> q3
+q3, b -> q3
+q3, c -> q3
+q3, eps -> q4
+q4, a -> q4
+q4, b -> q4
+q4, c -> q4
+q4, b -> q5
+q5, eps -> q1
 
-q1 -> q6 (eps)
-q6 -> q6 (a b c)
-q6 -> q7 (c)
-q7 -> q8 (c)
-q8 -> q8 (a b c)
-q8 -> q1 (eps)
+q1, eps -> q6
+q6, a -> q6
+q6, b -> q6
+q6, c -> q6
+q6, c -> q7
+q7, c -> q8
+q8, a -> q8
+q8, b -> q8
+q8, c -> q8
+q8, eps -> q1

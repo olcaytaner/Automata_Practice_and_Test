@@ -198,11 +198,12 @@ public class ExecuteTest {
             String nfaDefinition = "states: q0 q1 q2\n" +
                     "alphabet: a b\n" +
                     "start: q0\n" +
-                    "finals: q2\n" +
+                    "accept: q2\n" +
                     "transitions:\n" +
-                    "q0 -> q0 (a)\n" +
-                    "q0 -> q1 (a b)\n" +
-                    "q1 -> q2 (b)\n";
+                    "q0, a -> q0\n" +
+                    "q0, a -> q1\n" +
+                    "q0, b -> q1\n" +
+                    "q1, b -> q2\n";
 
             NFA parsedNFA = new NFA();
             ParseResult parseResult = parsedNFA.parse(nfaDefinition);
@@ -231,10 +232,10 @@ public class ExecuteTest {
             String nfaWithEpsilon = "states: q0 q1 q2\n" +
                     "alphabet: a b\n" +
                     "start: q0\n" +
-                    "finals: q2\n" +
+                    "accept: q2\n" +
                     "transitions:\n" +
-                    "q0 -> q1 (eps)\n" +
-                    "q1 -> q2 (a)\n";
+                    "q0, eps -> q1\n" +
+                    "q1, a -> q2\n";
 
             NFA parsedNFA = new NFA();
             ParseResult parseResult = parsedNFA.parse(nfaWithEpsilon);

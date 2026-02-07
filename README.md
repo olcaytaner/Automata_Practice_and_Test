@@ -152,14 +152,15 @@ Let's build a DFA that accepts strings ending with "ab":
 states: q0 q1 q2
 alphabet: a b
 start: q0
-finals: q2
+accept: q2
+
 transitions:
-q0 -> q0 (b)
-q0 -> q1 (a)
-q1 -> q1 (a)
-q1 -> q2 (b)
-q2 -> q0 (b)
-q2 -> q1 (a)
+q0, b -> q0
+q0, a -> q1
+q1, a -> q1
+q1, b -> q2
+q2, b -> q0
+q2, a -> q1
 ```
 
 ### 3. Compile & Visualize
@@ -198,12 +199,13 @@ Press `Ctrl+R` and try these inputs:
 states: q0 q1 q2
 alphabet: a b
 start: q0
-finals: q2
+accept: q2
+
 transitions:
-q0 -> q1 (a)
-q0 -> q0 (b)
-q1 -> q2 (b)
-q2 -> q1 (a)
+q0, a -> q1
+q0, b -> q0
+q1, b -> q2
+q2, a -> q1
 ```
 
 **File extension**: `.dfa`
@@ -218,12 +220,14 @@ q2 -> q1 (a)
 states: q0 q1 q2
 alphabet: a b
 start: q0
-finals: q2
+accept: q2
+
 transitions:
-q0 -> q1 (a eps)
-q0 -> q0 (b)
-q1 -> q2 (b)
-q2 -> q1 (a)
+q0, a -> q1
+q0, eps -> q1
+q0, b -> q0
+q1, b -> q2
+q2, a -> q1
 ```
 
 **Note**: Use `eps` for epsilon (ε) transitions
@@ -238,20 +242,21 @@ q2 -> q1 (a)
 
 ```text
 states: q0 q1 q2
-alphabet: a b
-stack_alphabet: Z a
+input: a b
+stack: Z a
 start: q0
 stack_start: Z
-finals: q2
+accept: q2
+
 transitions:
-q0 a Z -> q0 aZ
-q0 a a -> q0 aa
-q0 b a -> q1 eps
-q1 b a -> q1 eps
-q1 eps Z -> q2 eps
+q0, a, Z -> q0, aZ
+q0, a, a -> q0, aa
+q0, b, a -> q1, eps
+q1, b, a -> q1, eps
+q1, eps, Z -> q2, eps
 ```
 
-**Format**: `<state> <input> <stack_pop> -> <next_state> <stack_push>`
+**Format**: `<state>, <input>, <stack_pop> -> <next_state>, <stack_push>`
 
 **Acceptance**: Input consumed + final state + empty stack
 
@@ -265,21 +270,22 @@ q1 eps Z -> q2 eps
 
 ```text
 states: q0 q1 q_accept q_reject
-input_alphabet: 0 1
-tape_alphabet: 0 1 X _
+input: 0 1
+tape: 0 1 X _
 start: q0
 accept: q_accept
 reject: q_reject
+
 transitions:
-q0 0 -> q1 X R
-q0 1 -> q0 1 R
-q0 _ -> q_accept _ R
-q1 0 -> q0 0 R
-q1 1 -> q1 1 R
-q1 _ -> q_reject _ R
+q0, 0 -> q1, X, R
+q0, 1 -> q0, 1, R
+q0, _ -> q_accept, _, R
+q1, 0 -> q0, 0, R
+q1, 1 -> q1, 1, R
+q1, _ -> q_reject, _, R
 ```
 
-**Format**: `<state> <read> -> <next_state> <write> <direction>`
+**Format**: `<state>, <read> -> <next_state>, <write>, <direction>`
 
 **Requirements**:
 - Accept state must be `q_accept`
@@ -295,10 +301,11 @@ q1 _ -> q_reject _ R
 **Use case**: Programming language syntax, nested structures
 
 ```text
-Variables = S A B
-Terminals = a b
-Start = S
+vars: S A B
+terminals: a b
+start: S
 
+rules:
 S -> A B | a S b
 A -> a | a A
 B -> b | b B
@@ -315,11 +322,11 @@ B -> b | b B
 **Use case**: Pattern matching, input validation
 
 ```text
-(ab*c) u d u eps
-a b c d
+alphabet: a b c d
+pattern: (ab*c) u d u eps
 ```
 
-**Format**: Line 1 = regex, Line 2 = alphabet
+**Format**: `alphabet:` defines valid symbols, `pattern:` defines the regex
 
 **Operators**: `*` (Kleene star), `u` (union), `()` (grouping)
 
@@ -331,12 +338,12 @@ a b c d
 
 | Type | Extension | Key Sections |
 |:----:|:---------:|--------------|
-| DFA | `.dfa` | states, alphabet, start, finals, transitions |
-| NFA | `.nfa` | states, alphabet, start, finals, transitions |
-| PDA | `.pda` | states, alphabet, stack_alphabet, start, stack_start, finals, transitions |
-| TM | `.tm` | states, input_alphabet, tape_alphabet, start, accept, reject, transitions |
-| CFG | `.cfg` | Variables, Terminals, Start, Productions |
-| REX | `.rex` | regex pattern, alphabet |
+| DFA | `.dfa` | states, alphabet, start, accept, transitions |
+| NFA | `.nfa` | states, alphabet, start, accept, transitions |
+| PDA | `.pda` | states, input, stack, start, stack_start, accept, transitions |
+| TM | `.tm` | states, input, tape, start, accept, reject, transitions |
+| CFG | `.cfg` | vars, terminals, start, rules |
+| REX | `.rex` | alphabet, pattern |
 
 **Tip**: Use `#` for comments in all formats (except REX)
 

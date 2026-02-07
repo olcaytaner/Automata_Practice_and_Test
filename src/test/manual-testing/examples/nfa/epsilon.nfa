@@ -1,11 +1,16 @@
-Start: q1
-Finals: q3
-Alphabet: a b c
-States: q1 q2 q3
+states: q1 q2 q3
+alphabet: a b c
+start: q1
+accept: q3
 
-Transitions:
-q1 -> q2 (b)
-q1 -> q3 (b eps)
-q2 -> q2 (a c)
-q2 -> q3 (b c eps)
-q3 -> q1 (a eps)
+transitions:
+q1, b -> q2
+q1, b -> q3
+q1, eps -> q3
+q2, a -> q2
+q2, c -> q2
+q2, b -> q3
+q2, c -> q3
+q2, eps -> q3
+q3, a -> q1
+q3, eps -> q1

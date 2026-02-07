@@ -67,90 +67,125 @@ public class InputNormalizer {
     }
 
     /**
-     * Normalizes CFG input from "Variables = ..." format to "variables: ..." format
+     * Normalizes CFG input from Smart Text colon-based format (vars:, terminals:, start:, rules:)
      */
     private static NormalizedInput normalizeCFGInput(String inputText, List<ValidationMessage> messages) {
         Map<String, List<String>> sections = new HashMap<>();
         Map<String, Integer> sectionLineNumbers = new HashMap<>();
 
         String[] lines = inputText.split("\\R");
-        List<String> productionLines = new ArrayList<>();
+        String currentSection = null;
 
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
             if (line.isEmpty() || line.startsWith("#")) continue;
 
-            String lowercaseLine = line.toLowerCase();
+            int colonIndex = line.indexOf(":");
+            if (colonIndex != -1) {
+                String keyword = line.substring(0, colonIndex).trim().toLowerCase();
+                String data = line.substring(colonIndex + 1).trim();
 
-            if (lowercaseLine.startsWith("variables =") || lowercaseLine.startsWith("variables=")) {
-                String content = extractAfterEquals(line);
-                sections.put("variables", Arrays.asList(content.split("\\s+")));
-                sectionLineNumbers.put("variables", i + 1);
-            } else if (lowercaseLine.startsWith("terminals =") || lowercaseLine.startsWith("terminals=")) {
-                String content = extractAfterEquals(line);
-                sections.put("terminals", Arrays.asList(content.split("\\s+")));
-                sectionLineNumbers.put("terminals", i + 1);
-            } else if (lowercaseLine.startsWith("start =") || lowercaseLine.startsWith("start=")) {
-                String content = extractAfterEquals(line);
-                sections.put("start", Arrays.asList(content.trim()));
-                sectionLineNumbers.put("start", i + 1);
+                // Normalize CFG keyword variations
+                keyword = normalizeCFGKeyword(keyword);
+
+                if (keyword != null) {
+                    currentSection = keyword;
+                    if (sections.containsKey(currentSection)) {
+                        messages.add(new ValidationMessage(
+                                "Duplicate keyword '" + currentSection + "'. Only the first definition will be used.",
+                                i + 1, ValidationMessage.ValidationMessageType.WARNING));
+                        currentSection = null;
+                        continue;
+                    }
+
+                    sections.put(currentSection, new ArrayList<>());
+                    sectionLineNumbers.put(currentSection, i + 1);
+
+                    if (!data.isEmpty()) {
+                        if ("productions".equals(currentSection)) {
+                            sections.get(currentSection).add(data);
+                        } else {
+                            sections.get(currentSection).addAll(Arrays.asList(data.split("\\s+")));
+                        }
+                    }
+                } else if (currentSection != null) {
+                    // Line with colon but not a keyword — could be a production rule like S -> aA
+                    sections.get(currentSection).add(line);
+                }
+            } else if (currentSection != null) {
+                sections.get(currentSection).add(line);
             } else if (line.contains("->")) {
-                productionLines.add(line);
-                if (!sectionLineNumbers.containsKey("productions")) {
+                // Production line before any section — add to productions
+                if (!sections.containsKey("productions")) {
+                    sections.put("productions", new ArrayList<>());
                     sectionLineNumbers.put("productions", i + 1);
                 }
+                sections.get("productions").add(line);
             }
-        }
-
-        if (!productionLines.isEmpty()) {
-            sections.put("productions", productionLines);
         }
 
         return new NormalizedInput(sections, sectionLineNumbers, messages);
     }
 
     /**
-     * Normalizes Regular Expression input to standard format
+     * Normalizes CFG-specific keywords to canonical form.
+     */
+    private static String normalizeCFGKeyword(String keyword) {
+        switch (keyword) {
+            case "vars":
+            case "variables":
+                return "variables";
+            case "terminals":
+                return "terminals";
+            case "start":
+                return "start";
+            case "rules":
+            case "productions":
+                return "productions";
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Normalizes Regular Expression input from Smart Text format (alphabet: + pattern:)
      */
     private static NormalizedInput normalizeRegexInput(String inputText, List<ValidationMessage> messages) {
         Map<String, List<String>> sections = new HashMap<>();
         Map<String, Integer> sectionLineNumbers = new HashMap<>();
 
         String[] lines = inputText.split("\\R");
-        List<String> nonEmptyLines = new ArrayList<>();
 
-        for (String line : lines) {
-            line = line.trim();
-            if (!line.isEmpty() && !line.startsWith("#")) {
-                nonEmptyLines.add(line);
-            }
-        }
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i].trim();
+            if (line.isEmpty() || line.startsWith("#")) continue;
 
-        if (nonEmptyLines.size() >= 1) {
-            sections.put("regex", Arrays.asList(nonEmptyLines.get(0)));
-            sectionLineNumbers.put("regex", 1);
-        }
+            int colonIndex = line.indexOf(":");
+            if (colonIndex != -1) {
+                String keyword = line.substring(0, colonIndex).trim().toLowerCase();
+                String data = line.substring(colonIndex + 1).trim();
 
-        if (nonEmptyLines.size() >= 2) {
-            // Parse alphabet from comma or space separated format
-            String alphabetLine = nonEmptyLines.get(1);
-            String[] alphabetChars;
-            if (alphabetLine.contains(",")) {
-                alphabetChars = alphabetLine.split(",");
-            } else {
-                alphabetChars = alphabetLine.split("\\s+");
-            }
-
-            List<String> cleanedAlphabet = new ArrayList<>();
-            for (String ch : alphabetChars) {
-                String cleaned = ch.trim();
-                if (!cleaned.isEmpty()) {
-                    cleanedAlphabet.add(cleaned);
+                if ("alphabet".equals(keyword) || "sigma".equals(keyword)) {
+                    String[] alphabetChars;
+                    if (data.contains(",")) {
+                        alphabetChars = data.split(",");
+                    } else {
+                        alphabetChars = data.split("\\s+");
+                    }
+                    List<String> cleanedAlphabet = new ArrayList<>();
+                    for (String ch : alphabetChars) {
+                        String cleaned = ch.trim();
+                        if (!cleaned.isEmpty()) {
+                            cleanedAlphabet.add(cleaned);
+                        }
+                    }
+                    sections.put("alphabet", cleanedAlphabet);
+                    sectionLineNumbers.put("alphabet", i + 1);
+                } else if ("pattern".equals(keyword) || "regex".equals(keyword)) {
+                    sections.put("regex", Arrays.asList(data));
+                    sectionLineNumbers.put("regex", i + 1);
                 }
             }
-
-            sections.put("alphabet", cleanedAlphabet);
-            sectionLineNumbers.put("alphabet", 2);
         }
 
         return new NormalizedInput(sections, sectionLineNumbers, messages);
@@ -208,30 +243,41 @@ public class InputNormalizer {
     }
 
     /**
-     * Normalizes keyword variations to standard form
+     * Normalizes keyword variations to standard form.
+     * Smart Text canonical keywords: states, alphabet, start, accept/finals,
+     * input (→alphabet), tape (→tape_alphabet), stack (→stack_alphabet),
+     * reject, transitions, stack_start
      */
     private static String normalizeKeyword(String keyword) {
         switch (keyword.toLowerCase()) {
+            // Accept/finals variations
             case "finals":
             case "final":
             case "accepting":
             case "accept":
                 return "finals";
+            // Input alphabet variations
             case "alphabet":
             case "sigma":
-                return "alphabet";
+            case "input":
             case "input_alphabet":
             case "inputalphabet":
                 return "alphabet";
+            // Tape alphabet variations
+            case "tape":
             case "tape_alphabet":
             case "tapealphabet":
                 return "tape_alphabet";
+            // Stack alphabet variations
+            case "stack":
             case "stack_alphabet":
             case "stackalphabet":
                 return "stack_alphabet";
+            // Stack start variations
             case "stack_start":
             case "stackstart":
                 return "stack_start";
+            // Reject variations
             case "reject":
             case "rejecting":
                 return "reject";

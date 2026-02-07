@@ -1,21 +1,30 @@
-Start: q0
-Finals: q5 q7
-Alphabet: a b c
-States: q0 q1 q2 q3 q4 q5 q6 q7
+states: q0 q1 q2 q3 q4 q5 q6 q7
+alphabet: a b c
+start: q0
+accept: q5 q7
 
-Transitions:
-q0 -> q0 (c)
-q0 -> q1 (a b)
-q1 -> q2 (a)
-q1 -> q3 (b)
-q1 -> q1 (c)
-q2 -> q2 (a c)
-q5 -> q5 (a b c)
-q2 -> q4 (b)
-q4 -> q5 (a)
-q3 -> q4 (a)
-q6 -> q7 (a)
-q3 -> q3 (b c)
-q4 -> q6 (b c)
-q6 -> q0 (b c)
-q7 -> q7 (a b c)
+transitions:
+q0, c -> q0
+q0, a -> q1
+q0, b -> q1
+q1, a -> q2
+q1, b -> q3
+q1, c -> q1
+q2, a -> q2
+q2, c -> q2
+q5, a -> q5
+q5, b -> q5
+q5, c -> q5
+q2, b -> q4
+q4, a -> q5
+q3, a -> q4
+q6, a -> q7
+q3, b -> q3
+q3, c -> q3
+q4, b -> q6
+q4, c -> q6
+q6, b -> q0
+q6, c -> q0
+q7, a -> q7
+q7, b -> q7
+q7, c -> q7

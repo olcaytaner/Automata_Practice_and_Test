@@ -178,9 +178,9 @@ public class FileManagerTest {
             String nfaContent = "states: q0 q1\n" +
                                "alphabet: a b\n" +
                                "start: q0\n" +
-                               "finals: q1\n" +
+                               "accept: q1\n" +
                                "transitions:\n" +
-                               "q0 -> q1 (a)\n";
+                               "q0, a -> q1\n";
             
             Files.write(nfaFile.toPath(), nfaContent.getBytes());
             
@@ -196,12 +196,13 @@ public class FileManagerTest {
         void testCreateDFAPanel() throws IOException {
             // Create a temporary DFA file
             File dfaFile = tempDir.resolve("test.dfa").toFile();
-            String dfaContent = "Start: q0\n" +
-                               "Finals: q1\n" +
-                               "Alphabet: a b\n" +
-                               "States: q0 q1\n" +
-                               "Transitions:\n" +
-                               "q0 -> q1 (a)\n";
+            String dfaContent = "states: q0 q1\n" +
+                               "alphabet: a b\n" +
+                               "start: q0\n" +
+                               "accept: q1\n" +
+                               "\n" +
+                               "transitions:\n" +
+                               "q0, a -> q1\n";
             
             Files.write(dfaFile.toPath(), dfaContent.getBytes());
             
@@ -217,8 +218,8 @@ public class FileManagerTest {
         void testCreateREXPanel() throws IOException {
             // Create a temporary REX file with correct format
             File rexFile = tempDir.resolve("test.rex").toFile();
-            String rexContent = "(a|b)*abb\n" +
-                               "a b\n";  // Use correct space-separated format
+            String rexContent = "alphabet: a b\n" +
+                               "pattern: (aub)*abb\n";
             
             Files.write(rexFile.toPath(), rexContent.getBytes());
             

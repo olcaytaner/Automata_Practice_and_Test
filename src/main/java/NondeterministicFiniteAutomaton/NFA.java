@@ -25,19 +25,19 @@ import java.util.regex.Pattern;
  * It supports states, alphabet, transitions, and distinguishes between start and final states.
  * </p>
  * <p>
- * The expected input format includes:
+ * The expected input format (Smart Text) includes:
  * <ul>
- *   <li>A "start:" line with exactly one start state.</li>
- *   <li>A "finals:" line with one or more final states.</li>
+ *   <li>A "states:" line with all state names.</li>
  *   <li>An "alphabet:" line with valid characters.</li>
- *   <li>A "transitions:" section with valid state-to-state transitions using symbols from the alphabet.</li>
+ *   <li>A "start:" line with exactly one start state.</li>
+ *   <li>An "accept:" line with one or more accepting/final states.</li>
+ *   <li>A "transitions:" section with one transition per line in format: fromState, symbol -> toState</li>
  * </ul>
  * </p>
  */
 public class NFA extends Automaton {
 
-    private static final String transitionPattern = "(?:(q\\S+)|.) ?-> ?(?:(q\\S+)|\\S*)? ?(?:(\\((?:[a-zA-Z0-9]|eps)(?:\\s(?:[a-zA-Z0-9]|eps))*\\s?\\))|.*)?";
-    private static final String transitionSymbolPattern = "\\((?:[a-zA-Z0-9]|eps)(?:\\s(?:[a-zA-Z0-9]|eps))*\\s?\\)";
+    private static final String smartTextTransitionPattern = "^\\s*(\\S+)\\s*,\\s*(\\S+)\\s*->\\s*(\\S+)\\s*$";
     private static final String statePattern = "q\\S+";
 
     private Map<String, State> states;
@@ -448,8 +448,9 @@ public class NFA extends Automaton {
     }
 
     /**
-     * Parses and validates a single transition line.
-     * Ensures correct syntax for state names and symbols, verifies alphabet inclusion, and adds transitions.
+     * Parses and validates a single transition line in Smart Text format.
+     * Expected format: {@code fromState, symbol -> toState}
+     * Each line produces exactly one transition. The symbol can be {@code eps} for epsilon transitions.
      *
      * @param line   the input line representing a transition
      * @param lineNo the line number for error reporting
@@ -458,129 +459,86 @@ public class NFA extends Automaton {
     private List<ValidationMessage> handleTransitionLines(String line, int lineNo){
         List<ValidationMessage> warnings = new ArrayList<>();
 
-        Pattern fullPattern = Pattern.compile("^" + transitionPattern + "$");
-        Pattern partialPattern = Pattern.compile(transitionPattern);
-        Matcher matcher = fullPattern.matcher(line);
-        String wrongPart = line;
-        String message = "";
-        String fromStateName = null;
-        String toStateName = null;
-        if (matcher.find()) {
-            wrongPart = wrongPart.replace("->", "");
-            if (matcher.group(1) != null && matcher.group(1).matches(statePattern)) {
-                fromStateName = matcher.group(1);
-                wrongPart = wrongPart.replaceFirst(Pattern.quote(matcher.group(1)),"");
-            }else {
-                message += "First state incorrect \n";
-            }
+        Pattern pattern = Pattern.compile(smartTextTransitionPattern);
+        Matcher matcher = pattern.matcher(line);
 
-            if (matcher.group(2) != null && matcher.group(2).matches(statePattern)) {
-                toStateName = matcher.group(2);
-                wrongPart = wrongPart.replaceFirst(Pattern.quote(matcher.group(2)),"");
-            }else {
-                message += "Second state incorrect \n";
-            }
-
-            if (matcher.group(3) != null && matcher.group(3).matches(transitionSymbolPattern)) {
-                wrongPart = wrongPart.replaceFirst(Pattern.quote(matcher.group(3)),"");
-            }else {
-                message += "Transition letters incorrect \n";
-            }
-            wrongPart = wrongPart.trim();
-
-        }else {
-            matcher = partialPattern.matcher(line);
-            if (matcher.find()) {
-                message = "Valid transition found, but line has extra/invalid content";
-            }else {
-                message = "Whole line is wrong ";
-            }
+        if (!matcher.matches()) {
+            warnings.add(new ValidationMessage("Wrong transition syntax. Expected format: fromState, symbol -> toState. Got: \"" + line + "\"",
+                    lineNo, ValidationMessageType.ERROR));
+            return warnings;
         }
 
-        if (!message.isEmpty() || !wrongPart.isEmpty()) {
-            warnings.add(new ValidationMessage("Wrong transition syntax: " + message + " Wrong part: " + "\"" + wrongPart + "\"",
+        String fromStateName = matcher.group(1);
+        String symbolStr = matcher.group(2);
+        String toStateName = matcher.group(3);
+
+        // Validate from state name
+        if (!fromStateName.matches("^" + statePattern + "$")) {
+            warnings.add(new ValidationMessage("First state incorrect: " + fromStateName, lineNo, ValidationMessageType.ERROR));
+            return warnings;
+        }
+
+        // Validate to state name
+        if (!toStateName.matches("^" + statePattern + "$")) {
+            warnings.add(new ValidationMessage("Second state incorrect: " + toStateName, lineNo, ValidationMessageType.ERROR));
+            return warnings;
+        }
+
+        // Resolve states
+        State fromState = this.states.getOrDefault(fromStateName, null);
+        State toState = this.states.getOrDefault(toStateName, null);
+
+        if (fromState == null || toState == null) {
+            String s = "";
+            if (fromState == null) {
+                s += "From state is not in states: " + fromStateName + "\n";
+            }
+            if (toState == null) {
+                s += "To state is not in states: " + toStateName + "\n";
+            }
+            warnings.add(new ValidationMessage(s, lineNo, ValidationMessageType.ERROR));
+            return warnings;
+        }
+
+        // Resolve symbol
+        Symbol symbolTemp;
+        if (isEpsilonInput(symbolStr)) {
+            symbolTemp = new Symbol(EPSILON_CHAR);
+        } else {
+            if (symbolStr.length() != 1 || !Character.isLetterOrDigit(symbolStr.charAt(0))) {
+                warnings.add(new ValidationMessage("Invalid transition symbol: " + symbolStr, lineNo, ValidationMessageType.ERROR));
+                return warnings;
+            }
+            symbolTemp = new Symbol(symbolStr.charAt(0));
+        }
+
+        // Check symbol is in alphabet (epsilon doesn't need to be)
+        if (!this.alphabet.contains(symbolTemp) && !isEpsilonInput(symbolStr)) {
+            warnings.add(new ValidationMessage("Alphabet does not contain transition symbol: " + symbolStr,
                     lineNo, ValidationMessageType.ERROR));
-        }else {
-            //syntax correct, check for duplicate
-            boolean alreadyExists = false;
-            if (fromStateName != null && this.states.get(fromStateName) != null) {
-                State fromState = this.states.get(fromStateName);
-                if (this.transitions.get(fromState) != null) {
-                    for (FSATransition t : this.transitions.get(fromState)) {
-                        if (t.getToState().getName().equals(toStateName)) {
-                            alreadyExists = true;
-                            break;
-                        }
-                    }
-                }
-            }
+            return warnings;
+        }
 
-            if (alreadyExists) {
-                warnings.add(new ValidationMessage("There is already this transition: " + fromStateName + " -> " + toStateName,
-                        lineNo, ValidationMessageType.ERROR));
-            }
+        // Check for duplicate transition
+        FSATransition transition = new FSATransition(fromState, symbolTemp, toState);
+        List<FSATransition> existingTransitions = this.transitions.getOrDefault(fromState, new ArrayList<>());
+        if (existingTransitions.contains(transition)) {
+            warnings.add(new ValidationMessage("Duplicate transition: " + fromStateName + ", " + symbolStr + " -> " + toStateName,
+                    lineNo, ValidationMessageType.ERROR));
+            return warnings;
+        }
 
-            if (fromStateName != null && toStateName != null) {
+        // Add transition
+        if (this.transitions.containsKey(fromState)) {
+            this.transitions.get(fromState).add(transition);
+        } else {
+            List<FSATransition> transitionList = new ArrayList<>();
+            transitionList.add(transition);
+            this.transitions.put(fromState, transitionList);
+        }
 
-                State fromState = this.states.getOrDefault(fromStateName, null);
-                State toState = this.states.getOrDefault(toStateName, null);
-
-                String transitionName = matcher.group(3);
-
-                if (fromState != null && toState != null && transitionName != null) {
-
-                    String[] symbols = transitionName.substring(1, transitionName.length()-1).split("\\s");
-
-                    List<FSATransition> transitionList = new ArrayList<>();
-                    for (String symbol : symbols) {
-                        Symbol symbolTemp;
-                        if (isEpsilonInput(symbol)) {
-                            symbolTemp = new Symbol(EPSILON_CHAR);
-                        }else{
-                            symbolTemp = new Symbol(symbol.charAt(0));
-                        }
-                        if (!this.alphabet.contains(symbolTemp) && !isEpsilonInput(symbol)) {
-                            warnings.add(new ValidationMessage("Alphabet does not contain transition symbol: " + symbol,
-                                    lineNo, ValidationMessageType.ERROR));
-                            continue;
-                        }
-                        FSATransition transition = new FSATransition(fromState, symbolTemp, toState);
-                        if (!alreadyExists){
-                            if (transitionList.contains(transition)) {
-                                warnings.add(new ValidationMessage("Duplicate transition symbol: " + symbolTemp.getValue(), lineNo, ValidationMessageType.ERROR));
-                            }else {
-                                //unique transition and unique symbol
-                                transitionList.add(transition);
-                            }
-                        }
-                    }
-
-                    if (!transitionList.isEmpty()) {
-                        if (this.transitions.containsKey(fromState)){
-                            this.transitions.get(fromState).addAll(transitionList);
-                        }else {
-                            this.transitions.put(fromState,transitionList);
-                        }
-                        if (VERBOSE){
-                            System.out.println("Transition correct: " + line);
-                        }
-                        //correct
-                    }
-                }else {
-                    if (transitionName == null) {
-                        warnings.add(new ValidationMessage("Transition symbol is wrong", lineNo, ValidationMessageType.ERROR));
-                    }
-                    String s = "";
-                    if (fromState == null){
-                        s += "From state is not in states: " + fromStateName + "\n";
-                    }
-                    if (toState == null){
-                        s += "To state is not in states: " + toStateName + "\n";
-                    }
-                    warnings.add(new ValidationMessage(s, lineNo, ValidationMessageType.ERROR));
-                }
-            }
-
+        if (VERBOSE) {
+            System.out.println("Transition correct: " + line);
         }
 
         return warnings;
@@ -951,13 +909,16 @@ public class NFA extends Automaton {
 
     @Override
     public String getDefaultTemplate() {
-        return "Start: q1\n" +
-               "Finals: q2\n" +
-               "Alphabet: a b\n" +
-               "States: q1 q2\n" +
+        return "states: q0 q1 q2\n" +
+               "alphabet: a b\n" +
+               "start: q0\n" +
+               "accept: q2\n" +
                "\n" +
-               "Transitions:\n" +
-               "q1 -> q2 (a b eps)\n" +
-               "q2 -> q2 (a b)\n";
+               "transitions:\n" +
+               "q0, a -> q1\n" +
+               "q0, b -> q0\n" +
+               "q0, eps -> q1\n" +
+               "q1, a -> q2\n" +
+               "q1, b -> q1\n";
     }
 }

@@ -1,15 +1,15 @@
 states: q0 q1 q2 q3 q4
-alphabet: a b
-stack_alphabet: Z  1
+input: a b
+stack: Z  1
 start: q0
 stack_start: eps
-finals: q1 q2 q4
+accept: q1 q2 q4
 transitions:
-q0 a eps -> q1 Z
-q0 b eps -> q4 eps
-q1 a eps -> q1 1
-q1 eps eps -> q2 eps
-q2 b 1 -> q2 eps
-q2 b Z -> q3 eps
-q3 b eps -> q4 eps
-q4 b eps -> q4 eps
+q0, a, eps -> q1, Z
+q0, b, eps -> q4, eps
+q1, a, eps -> q1, 1
+q1, eps, eps -> q2, eps
+q2, b, 1 -> q2, eps
+q2, b, Z -> q3, eps
+q3, b, eps -> q4, eps
+q4, b, eps -> q4, eps

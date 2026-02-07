@@ -1,18 +1,18 @@
 #week3-3
-Start: q0
-Finals: q0 q4 q8
-Alphabet: 0 1
-States: q0 q1 q2 q3 q4 q5 q6 q7 q8
+states: q0 q1 q2 q3 q4 q5 q6 q7 q8
+alphabet: 0 1
+start: q0
+accept: q0 q4 q8
 transitions:
-q0 -> q1 (eps)
+q0, eps -> q1
 
-q1 -> q2 (1)
-q2 -> q3 (1)
-q3 -> q4 (0)
-q4 -> q1 (eps)
+q1, 1 -> q2
+q2, 1 -> q3
+q3, 0 -> q4
+q4, eps -> q1
 
-q1 -> q5 (0)
-q5 -> q6 (1)
-q6 -> q7 (1)
-q7 -> q8 (0)
-q8 -> q1 (eps)
+q1, 0 -> q5
+q5, 1 -> q6
+q6, 1 -> q7
+q7, 0 -> q8
+q8, eps -> q1

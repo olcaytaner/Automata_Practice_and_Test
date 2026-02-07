@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
  */
 public class TMParser {
 
-    private static final Pattern TRANSITION_LINE = Pattern.compile("(\\S+)\\s+(\\S+)\\s*->\\s*(\\S+)\\s+(\\S+)\\s+([LR])");
+    private static final Pattern TRANSITION_LINE = Pattern.compile("\\s*(\\S+)\\s*,\\s*(\\S+)\\s*->\\s*(\\S+)\\s*,\\s*(\\S+)\\s*,\\s*([LR])\\s*");
 
     /**
      * Parses a Turing Machine definition from a string.
@@ -48,6 +48,12 @@ public class TMParser {
             if (parts.length == 2) {
                 String header = parts[0].trim().toLowerCase();
                 String sectionContent = parts[1].trim();
+                // Normalize Smart Text keywords to internal keys
+                if (header.equals("input")) {
+                    header = "input_alphabet";
+                } else if (header.equals("tape")) {
+                    header = "tape_alphabet";
+                }
                 context.sectionContent.put(header, sectionContent);
                 inTransitions = header.equals("transitions");
             } else if (inTransitions) {

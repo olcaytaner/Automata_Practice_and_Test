@@ -55,11 +55,12 @@ class TestServiceValidationTest {
                 "alphabet: a b\n" +
                 "start: q0\n" +
                 "finals: q1\n" +
+                "\n" +
                 "transitions:\n" +
-                "q0 -> q1 (a)\n" +
-                "q0 -> q0 (b)\n" +
-                "q1 -> q1 (a)\n" +
-                "q1 -> q0 (b)\n";
+                "q0, a -> q1\n" +
+                "q0, b -> q0\n" +
+                "q1, a -> q1\n" +
+                "q1, b -> q0\n";
 
             DFA dfa = new DFA();
             dfa.parse(dfaInput);
@@ -92,14 +93,16 @@ class TestServiceValidationTest {
         void testNfaSuccess() throws IOException {
             // Create NFA that accepts strings containing 'a'
             String nfaInput =
-                "start: q0\n" +
-                "finals: q1\n" +
-                "alphabet: a b\n" +
                 "states: q0 q1\n" +
+                "alphabet: a b\n" +
+                "start: q0\n" +
+                "accept: q1\n" +
                 "transitions:\n" +
-                "q0 -> q0 (a b)\n" +
-                "q0 -> q1 (a)\n" +
-                "q1 -> q1 (a b)\n";
+                "q0, a -> q0\n" +
+                "q0, b -> q0\n" +
+                "q0, a -> q1\n" +
+                "q1, a -> q1\n" +
+                "q1, b -> q1\n";
 
             NFA nfa = new NFA();
             nfa.parse(nfaInput);
@@ -132,17 +135,17 @@ class TestServiceValidationTest {
         void testTmSuccess() throws IOException {
             // Create TM that accepts any input (immediately transitions to accept state)
             String tmInput =
+                "states: q0 q_accept q_reject\n" +
+                "input: a b\n" +
+                "tape: a b _\n" +
                 "start: q0\n" +
                 "accept: q_accept\n" +
                 "reject: q_reject\n" +
-                "tape_alphabet: a b _\n" +
-                "input_alphabet: a b\n" +
-                "states: q0 q_accept q_reject\n" +
                 "\n" +
                 "transitions:\n" +
-                "q0 a -> q_accept a R\n" +
-                "q0 b -> q_accept b R\n" +
-                "q0 _ -> q_accept _ R\n";
+                "q0, a -> q_accept, a, R\n" +
+                "q0, b -> q_accept, b, R\n" +
+                "q0, _ -> q_accept, _, R\n";
 
             // TM.parse() returns a new TM in the ParseResult, doesn't update the original
             TM tmTemplate = new TM();
@@ -182,10 +185,11 @@ class TestServiceValidationTest {
             // Create CFG with 8 production rules using correct format
             // S -> aB | bA, A -> a | aS | bAA, B -> b | bS | aBB
             String cfgInput =
-                "Variables = S A B\n" +
-                "Terminals = a b\n" +
-                "Start = S\n" +
+                "vars: S A B\n" +
+                "terminals: a b\n" +
+                "start: S\n" +
                 "\n" +
+                "rules:\n" +
                 "S -> a B | b A\n" +
                 "A -> a | a S | b A A\n" +
                 "B -> b | b S | a B B\n";
@@ -221,10 +225,11 @@ class TestServiceValidationTest {
         void testCfgRulesWithinLimit() throws IOException {
             // Create simple CFG with 2 rules using correct format
             String cfgInput =
-                "Variables = S\n" +
-                "Terminals = a b\n" +
-                "Start = S\n" +
+                "vars: S\n" +
+                "terminals: a b\n" +
+                "start: S\n" +
                 "\n" +
+                "rules:\n" +
                 "S -> a | b\n";
 
             CFG cfg = new CFG();
@@ -254,10 +259,11 @@ class TestServiceValidationTest {
         void testCfgNoLimitCheck() throws IOException {
             // Create CFG with 4 rules using correct format
             String cfgInput =
-                "Variables = S A B\n" +
-                "Terminals = a b\n" +
-                "Start = S\n" +
+                "vars: S A B\n" +
+                "terminals: a b\n" +
+                "start: S\n" +
                 "\n" +
+                "rules:\n" +
                 "S -> a B | b A\n" +
                 "A -> a\n" +
                 "B -> b\n";
@@ -289,20 +295,20 @@ class TestServiceValidationTest {
         @DisplayName("should return PDA violation ViewModel when transitions exceed limit")
         void testPdaTransitionsViolation() throws IOException {
             // Create PDA with 5 transitions using correct format
-            // Format: states, alphabet, stack_alphabet, start, stack_start, finals, transitions
+            // Format: states, input, stack, start, stack_start, accept, transitions
             String pdaInput =
                 "states: q0 q1 q2 q3\n" +
-                "alphabet: a b\n" +
-                "stack_alphabet: a Z\n" +
+                "input: a b\n" +
+                "stack: a Z\n" +
                 "start: q0\n" +
                 "stack_start: Z\n" +
-                "finals: q3\n" +
+                "accept: q3\n" +
                 "transitions:\n" +
-                "q0 a Z -> q1 aZ\n" +
-                "q0 a a -> q1 aa\n" +
-                "q1 b a -> q2 eps\n" +
-                "q2 b a -> q2 eps\n" +
-                "q2 eps Z -> q3 eps\n";
+                "q0, a, Z -> q1, aZ\n" +
+                "q0, a, a -> q1, aa\n" +
+                "q1, b, a -> q2, eps\n" +
+                "q2, b, a -> q2, eps\n" +
+                "q2, eps, Z -> q3, eps\n";
 
             PDA pda = new PDA();
             pda.parse(pdaInput);
@@ -337,14 +343,14 @@ class TestServiceValidationTest {
             // Create simple PDA with 2 transitions using correct format
             String pdaInput =
                 "states: q0 q1 q2\n" +
-                "alphabet: a\n" +
-                "stack_alphabet: Z\n" +
+                "input: a\n" +
+                "stack: Z\n" +
                 "start: q0\n" +
                 "stack_start: Z\n" +
-                "finals: q2\n" +
+                "accept: q2\n" +
                 "transitions:\n" +
-                "q0 a Z -> q1 Z\n" +
-                "q1 eps Z -> q2 eps\n";
+                "q0, a, Z -> q1, Z\n" +
+                "q1, eps, Z -> q2, eps\n";
 
             PDA pda = new PDA();
             pda.parse(pdaInput);
@@ -384,7 +390,7 @@ class TestServiceValidationTest {
         @DisplayName("should throw exception for null test file path")
         void testNullTestFilePath() {
             DFA dfa = new DFA();
-            dfa.parse("states: q0\nalphabet: a\nstart: q0\nfinals: q0\ntransitions:\nq0 -> q0 (a)\n");
+            dfa.parse("states: q0\nalphabet: a\nstart: q0\nfinals: q0\n\ntransitions:\nq0, a -> q0\n");
             SessionService.TestSettings settings = new SessionService.TestSettings(
                 0, 100, 30, null, null, null);
 
@@ -396,7 +402,7 @@ class TestServiceValidationTest {
         @DisplayName("should throw exception for null settings")
         void testNullSettings() throws IOException {
             DFA dfa = new DFA();
-            dfa.parse("states: q0\nalphabet: a\nstart: q0\nfinals: q0\ntransitions:\nq0 -> q0 (a)\n");
+            dfa.parse("states: q0\nalphabet: a\nstart: q0\nfinals: q0\n\ntransitions:\nq0, a -> q0\n");
             File testFile = createTestFile("a,1\n");
 
             assertThrows(IllegalArgumentException.class, () ->

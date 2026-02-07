@@ -1,17 +1,17 @@
 #week4-22
-Start: q0
-Finals: q0 q7
-Alphabet: a b
-States: q0 q1 q2 q3 q4 q5 q6 q7
+states: q0 q1 q2 q3 q4 q5 q6 q7
+alphabet: a b
+start: q0
+accept: q0 q7
 
-Transitions:
-q0 -> q1 (eps)
-q1 -> q2 (b)
-q2 -> q1 (b)
-q1 -> q3 (a)
-q3 -> q4 (b)
-q4 -> q1 (a)
-q1 -> q5 (b)
-q5 -> q6 (a)
-q6 -> q7 (a)
-q7 -> q1 (eps)
+transitions:
+q0, eps -> q1
+q1, b -> q2
+q2, b -> q1
+q1, a -> q3
+q3, b -> q4
+q4, a -> q1
+q1, b -> q5
+q5, a -> q6
+q6, a -> q7
+q7, eps -> q1

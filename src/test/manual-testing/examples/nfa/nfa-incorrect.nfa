@@ -1,12 +1,14 @@
-Start: q1 q2
-Finals: q2 qasd
-Alphabet: a b c eps ?
-States: qa q1
+states: qa q1
+alphabet: a b c eps ?
+start: q1 q2
+accept: q2 qasd
 transitions:
-q1 -> q2 (a eps)
-q? -> q1 (a)
-q2 -> qwe (a c)
-q2 -> q3 (b)
-q2 -> q3 (c)
-q4 -> q5 (abc)
-q5 -> q6 (d)
+q1, a -> q2
+q1, eps -> q2
+q?, a -> q1
+q2, a -> qwe
+q2, c -> qwe
+q2, b -> q3
+q2, c -> q3
+q4, abc -> q5
+q5, d -> q6

@@ -1,11 +1,13 @@
 #week2-5
-Start: q0
-Finals: q1 q2
-Alphabet: a b c
-States: q0 q1 q2
+states: q0 q1 q2
+alphabet: a b c
+start: q0
+accept: q1 q2
 transitions:
-q0 -> q1 (eps)
-q0 -> q2 (eps)
+q0, eps -> q1
+q0, eps -> q2
 
-q1 -> q1 (a b)
-q2 -> q2 (a c)
+q1, a -> q1
+q1, b -> q1
+q2, a -> q2
+q2, c -> q2
