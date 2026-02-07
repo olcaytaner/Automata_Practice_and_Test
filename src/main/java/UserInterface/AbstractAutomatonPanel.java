@@ -505,6 +505,17 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
         this.add(splitPane, BorderLayout.CENTER);
     }
 
+    /**
+     * Shows a message dialog in a headless-safe way.
+     */
+    protected void showMessage(Object message, String title, int messageType) {
+        if (java.awt.GraphicsEnvironment.isHeadless()) {
+            System.out.println("[HEADLESS] " + title + ": " + message);
+            return;
+        }
+        JOptionPane.showMessageDialog(this, message, title, messageType);
+    }
+
     // AutomatonPanel interface implementations
     @Override
     public void compileWithFigure() {
@@ -780,8 +791,7 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
             
             message += "Example: if your file is q1.nfa, create q1.test with test cases.";
             
-            JOptionPane.showMessageDialog(this, message, 
-                "Test File Not Found", JOptionPane.WARNING_MESSAGE);
+            showMessage(message, "Test File Not Found", JOptionPane.WARNING_MESSAGE);
             return;
         }
         

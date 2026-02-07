@@ -13,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -213,7 +212,6 @@ public class MainPanelTabTest {
         
         @Test
         @DisplayName("Should delegate run action to active panel")
-        @Disabled("it shows extra dialog and prevents automated testing")
         void testRunDelegation() {
             // Create an automaton to have an active panel
             mainPanel.createNewAutomaton("DFA");
