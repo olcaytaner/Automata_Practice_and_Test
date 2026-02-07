@@ -28,12 +28,12 @@ Each section begins with a keyword and a colon. Lines may contain comments (`# .
 - `states:` space-separated state names
 - `alphabet:` space-separated input symbols (single chars)
 - `start:` one state name
-- `finals:` space-separated accepting states
+- `accept:` space-separated accepting states
 - `transitions:` one transition per line (see below)
 
 **Transitions**
 ```
-<fromState> <inputSymbol> -> <toState>
+<fromState>, <inputSymbol> -> <toState>
 ```
 
 **Example**
@@ -41,14 +41,15 @@ Each section begins with a keyword and a colon. Lines may contain comments (`# .
 states: q0 q1 q2
 alphabet: a b
 start: q0
-finals: q2
+accept: q2
+
 transitions:
-q0 -> q1 (a)
-q0 -> q0 (b)
-q1 -> q1 (a)
-q1 -> q2 (b)
-q2 -> q1 (a)
-q2 -> q0 (b)
+q0, a -> q1
+q0, b -> q0
+q1, a -> q1
+q1, b -> q2
+q2, a -> q1
+q2, b -> q0
 ```
 
 ## 4. Components

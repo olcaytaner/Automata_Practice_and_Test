@@ -54,7 +54,7 @@ class TestServiceValidationTest {
                 "states: q0 q1\n" +
                 "alphabet: a b\n" +
                 "start: q0\n" +
-                "finals: q1\n" +
+                "accept: q1\n" +
                 "\n" +
                 "transitions:\n" +
                 "q0, a -> q1\n" +
@@ -390,7 +390,7 @@ class TestServiceValidationTest {
         @DisplayName("should throw exception for null test file path")
         void testNullTestFilePath() {
             DFA dfa = new DFA();
-            dfa.parse("states: q0\nalphabet: a\nstart: q0\nfinals: q0\n\ntransitions:\nq0, a -> q0\n");
+            dfa.parse("states: q0\nalphabet: a\nstart: q0\naccept: q0\n\ntransitions:\nq0, a -> q0\n");
             SessionService.TestSettings settings = new SessionService.TestSettings(
                 0, 100, 30, null, null, null);
 
@@ -402,7 +402,7 @@ class TestServiceValidationTest {
         @DisplayName("should throw exception for null settings")
         void testNullSettings() throws IOException {
             DFA dfa = new DFA();
-            dfa.parse("states: q0\nalphabet: a\nstart: q0\nfinals: q0\n\ntransitions:\nq0, a -> q0\n");
+            dfa.parse("states: q0\nalphabet: a\nstart: q0\naccept: q0\n\ntransitions:\nq0, a -> q0\n");
             File testFile = createTestFile("a,1\n");
 
             assertThrows(IllegalArgumentException.class, () ->

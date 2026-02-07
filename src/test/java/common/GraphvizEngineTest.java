@@ -59,7 +59,7 @@ class GraphvizEngineTest {
                 "states: q0 q1 q2\n" +
                         "alphabet: a b\n" +
                         "start: q0\n" +
-                        "finals: q2\n" +
+                        "accept: q2\n" +
                         "\n" +
                         "transitions:\n" +
                         "q0, a -> q1\n" +

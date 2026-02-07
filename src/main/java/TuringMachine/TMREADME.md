@@ -48,34 +48,35 @@ To use the module, you must define a TM in a text file with specific sections. E
 
 ### Required Sections
 -   `states`: A space-separated list of all state names (e.g., `q0 q1 q_accept`).
--   `input_alphabet`: Space-separated symbols for the input.
--   `tape_alphabet`: Space-separated symbols allowed on the tape (must include input alphabet symbols).
+-   `input`: Space-separated symbols for the input.
+-   `tape`: Space-separated symbols allowed on the tape (must include input alphabet symbols).
 -   `start`: The name of the start state.
 -   `accept`: The name of the accept state.
+-   `reject`: The name of the reject state.
 -   `transitions`: The header for the transition rules.
 
 ### Transitions
 Each transition rule must be on a new line in the format:
-`<current_state> <read_symbol> -> <next_state> <write_symbol> <direction>`
-(Example: `q0 0 -> q1 X R`)
+`<current_state>, <read_symbol> -> <next_state>, <write_symbol>, <direction>`
+(Example: `q0, 0 -> q1, X, R`)
 
 ### Example `.tm` File
 This TM accepts strings with an even number of zeros.
 ```
 states: q0 q1 q_accept q_reject
-input_alphabet: 0 1
-tape_alphabet: 0 1 _
+input: 0 1
+tape: 0 1 _
 start: q0
 accept: q_accept
 reject: q_reject
 
 transitions:
-q0 0 -> q1 0 R
-q0 1 -> q0 1 R
-q0 _ -> q_accept _ R
-q1 0 -> q0 0 R
-q1 1 -> q1 1 R
-q1 _ -> q_reject _ R
+q0, 0 -> q1, 0, R
+q0, 1 -> q0, 1, R
+q0, _ -> q_accept, _, R
+q1, 0 -> q0, 0, R
+q1, 1 -> q1, 1, R
+q1, _ -> q_reject, _, R
 ```
 
 ## 4. Core Java Components

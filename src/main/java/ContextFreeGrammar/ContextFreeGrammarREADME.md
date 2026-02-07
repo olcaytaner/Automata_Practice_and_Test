@@ -24,13 +24,13 @@ Parsing is performed using the **CYK algorithm** (on Chomsky Normal Form).
 
 ## 3. CFG Definition File Format (`.cfg`)
 
-Each section starts with a keyword and `=`. Lines may contain comments (`# ...`) and blank lines.
+Each section starts with a keyword and `:`. Lines may contain comments (`# ...`) and blank lines.
 
 **Required sections:**
-- `Variables =` space-separated variable names (uppercase)
-- `Terminals =` space-separated terminal names (lowercase)
-- `Start =` one variable name (must be in `Variables`)
-- Productions: one per line, format `<Variable> -> <symbols> | <alternative> ...`
+- `vars:` space-separated variable names (uppercase)
+- `terminals:` space-separated terminal names (lowercase)
+- `start:` one variable name (must be in `vars`)
+- `rules:` header followed by production lines
 
 **Productions:**
 - Left side: a variable (non-terminal)
@@ -39,10 +39,11 @@ Each section starts with a keyword and `=`. Lines may contain comments (`# ...`)
 
 **Example**
 ```text
-Variables = S A B
-Terminals = a b
-Start = S
+vars: S A B
+terminals: a b
+start: S
 
+rules:
 S -> A B
 A -> a
 B -> b

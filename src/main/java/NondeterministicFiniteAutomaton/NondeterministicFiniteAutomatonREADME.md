@@ -31,29 +31,32 @@ Each section begins with a keyword and a colon. Lines may contain comments (`# .
 - `states:` space-separated state names
 - `alphabet:` space-separated input symbols (single chars)
 - `start:` one state name
-- `finals:` space-separated accepting states
+- `accept:` space-separated accepting states
 - `transitions:` one transition per line (see below)
 
 **Transitions**
 ```
-<fromState> -> <toState> (<inputSymbol(s)>)
+<fromState>, <inputSymbol> -> <toState>
 ```
 - \<inputSymbol> can be ***eps*** to indicate an epsilon transition.
-- For each (\<fromState>, \<toState>) pair, there must be ***at most one line***.
+- Each transition is on its own line with exactly one symbol.
 
 **Example**
 ```text
 states: q0 q1 q2
-start: q0
-finals: q2
 alphabet: a b
+start: q0
+accept: q2
+
 transitions:
-q0 -> q1 (a eps)
-q0 -> q0 (b)
-q1 -> q1 (eps)
-q1 -> q2 (b)
-q2 -> q1 (a)
-q2 -> q0 (b eps)
+q0, a -> q1
+q0, eps -> q1
+q0, b -> q0
+q1, eps -> q1
+q1, b -> q2
+q2, a -> q1
+q2, b -> q0
+q2, eps -> q0
 ```
 
 ## 4. Components
