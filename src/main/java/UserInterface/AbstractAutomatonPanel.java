@@ -292,7 +292,13 @@ public abstract class AbstractAutomatonPanel extends JPanel implements Automaton
         textArea.getDocument().addUndoableEditListener(undoManager);
 
         // Get the platform-specific menu shortcut key mask (Command on Mac, Control on Windows/Linux)
-        int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+        // Handle headless environment for testing
+        int menuShortcutKeyMask;
+        if (java.awt.GraphicsEnvironment.isHeadless()) {
+            menuShortcutKeyMask = java.awt.event.InputEvent.CTRL_DOWN_MASK;
+        } else {
+            menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+        }
 
         // Define unique action key names to avoid conflicts with parent component action maps
         final String UNDO_ACTION_KEY = "cs410-text-undo";

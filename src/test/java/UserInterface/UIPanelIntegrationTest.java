@@ -39,12 +39,9 @@ public class UIPanelIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Create a test frame and main panel for UI testing
-        testFrame = new JFrame("Test");
-        mainPanel = TestMainPanelFactory.createForTesting();
+        // Create a headless main panel for UI testing
+        mainPanel = TestMainPanelFactory.createForHeadlessTesting();
         fileManager = mainPanel.fileManager;
-        testFrame.add(mainPanel);
-        testFrame.pack();
     }
 
     @Nested

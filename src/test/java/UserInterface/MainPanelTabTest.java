@@ -30,10 +30,7 @@ public class MainPanelTabTest {
 
     @BeforeEach
     void setUp() {
-        testFrame = new JFrame("Test");
-        mainPanel = TestMainPanelFactory.createForTesting();
-        testFrame.add(mainPanel);
-        testFrame.pack();
+        mainPanel = TestMainPanelFactory.createForHeadlessTesting();
     }
 
     @Nested
