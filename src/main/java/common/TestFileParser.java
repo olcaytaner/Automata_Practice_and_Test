@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -218,6 +219,8 @@ public class TestFileParser {
                 testCases.add(new TestCase(input, shouldAccept));
             }
         }
+
+        testCases.sort(Comparator.comparingInt(tc -> tc.getInput().length()));
 
         return new TestFileResult(testCases, minPoints, maxPoints, maxRegexLength, timeout, maxRules, maxTransitions);
     }
