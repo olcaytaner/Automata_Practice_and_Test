@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1] - 2026-02-25
+
+### Changed
+- **Test Case Sorting**: Test cases are now sorted by input string length (ascending) after parsing (#50)
+  - Shortest strings execute and display first, making it easier for students to trace failures manually
+  - Sorting applied in `TestFileParser` so both normal and timeout execution paths benefit
+
 ## [1.3.3] - 2025-12-23
 
 ### Fixed
