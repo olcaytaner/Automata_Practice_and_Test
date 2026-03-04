@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.4.2] - 2026-03-04
+
+### Fixed
+- **NFA Warning Panel**: NFA syntax errors now correctly shown in warnings panel (#52)
+  - Refactored `validate()` to re-parse input text and surface all validation messages
+  - Extracted `validateInternalConsistency()` as private method called after successful parse
+  - `ParseResult` now constructed after validation messages are fully collected
+
+## [1.4.1] - 2025-12-29
+
+### Changed
+- **Test Case Sorting**: Test cases are now sorted by input length for easier debugging (#51)
+
+## [1.4.0] - 2025-12-28
+
+### Added
+- **Unit Tests**: Added tests for TestService, TestServiceValidation, VisualizationService, and TestResultViewModel
+- **NFA/TM**: Added transition count methods to NFA and TM; states retrieval in PDA
+- **Headless Testing**: Headless-safe message dialog in AbstractAutomatonPanel for automated testing compatibility
+
+### Changed
+- **Symbol Constants**: Centralized epsilon and blank symbol handling with `SymbolConstants`
+- **MachineType Enum**: Simplified file extension retrieval by utilizing MachineType enum in Automaton
+- **Transitions Refactor**: Refactored transitions across automata implementations
+- **Execution/Parsing**: Refactored automaton execution and parsing result structures
+- **Regex**: Improved match and generation methods in syntax tree nodes
+- **Documentation**: Standardized README section headers and transition formats for CFG, DFA, NFA, and TM
+- **Test Config**: Enhanced test configuration with JVM memory settings and forking options
+
+### Fixed
+- **TM Step Limit**: Implemented step limit to prevent infinite loops and memory exhaustion in Turing Machine execution
+- **TM Transitions**: Updated binary increment and palindrome transition definitions for correctness
+- **PDA Definitions**: Updated PDA test files to use eps-pop for stack operations
+- **CFG**: Fixed NonTerminal casting in nullable checks and production mappings
+- **Test Files**: Fixed mt3_partb_2024-q2 solution
+
+### Removed
+- `AutomatonMetrics` class and its tests (functionality moved to automaton classes directly)
+
 ## [1.3.3] - 2025-12-23
 
 ### Fixed
