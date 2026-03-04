@@ -91,7 +91,8 @@ public class NFA extends Automaton {
         if (inputText == null) {
             throw new NullPointerException("Input text cannot be null");
         }
-        
+
+        this.inputText = inputText;
         this.states = new HashMap<>();
         this.alphabet = new HashSet<>();
         this.startState = null;
@@ -121,8 +122,6 @@ public class NFA extends Automaton {
 
         boolean isSuccess = messages.stream().noneMatch(m -> m.getType() == ValidationMessageType.ERROR);
         
-        ParseResult parseResult = new ParseResult(isSuccess, messages, isSuccess ? this : null);
-        
         // Log results
         int errorCount = (int) messages.stream().filter(m -> m.getType() == ValidationMessageType.ERROR).count();
         int warnCount = (int) messages.stream().filter(m -> m.getType() == ValidationMessageType.WARNING).count();
@@ -139,10 +138,10 @@ public class NFA extends Automaton {
         }
 
         if (isSuccess) {
-            messages.addAll(validate());
+            messages.addAll(validateInternalConsistency());
         }
 
-        return parseResult;
+        return new ParseResult(isSuccess, messages, isSuccess ? this : null);
     }
 
     /**
@@ -544,13 +543,33 @@ public class NFA extends Automaton {
         return warnings;
     }
 
+    @Override
+    public List<ValidationMessage> validate() {
+        List<ValidationMessage> messages = new ArrayList<>();
+
+        if (inputText == null || inputText.trim().isEmpty()) {
+            messages.add(new ValidationMessage("No input text provided", 0, ValidationMessage.ValidationMessageType.WARNING));
+            return messages;
+        }
+
+        try {
+            ParseResult result = parse(inputText);
+            messages.addAll(result.getValidationMessages());
+
+        } catch (Exception e) {
+            messages.add(new ValidationMessage("Validation error: " + e.getMessage(), 0, ValidationMessage.ValidationMessageType.ERROR));
+        }
+
+        return messages;
+    }
+
     /**
      * Validates the internal consistency of the NFA structure.
      *
      * @return list of {@link ValidationMessage} objects indicating errors or warnings
      */
-    @Override
-    public List<ValidationMessage> validate(){
+
+    private List<ValidationMessage> validateInternalConsistency(){
         List<ValidationMessage> validationWarnings = new ArrayList<>();
 
         validationWarnings.addAll(validateStartState());
