@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.3] - 2026-04-08
+
+### Fixed
+- **PDA Out-of-Memory Handling**: Handle PDA out-of-memory execution failures (#55)
+
 ## [1.4.2] - 2026-03-04
 
 ### Fixed

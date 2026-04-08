@@ -124,7 +124,7 @@ Batch Testing
 1. **Download** the latest JAR from [Releases](https://github.com/olcaytaner/Automata_Practice_and_Test/releases)
 2. **Run** with double-click or:
    ```bash
-   java -jar Automata_Practice_and_Test-1.3.2.jar
+   java -jar CS410-Exam-1.4.3.jar
    ```
 
 **That's it!** No Maven, no compilation, no setup.
@@ -135,7 +135,7 @@ Batch Testing
 git clone https://github.com/olcaytaner/Automata_Practice_and_Test.git
 cd Automata_Practice_and_Test
 mvn clean package
-java -jar target/Automata_Practice_and_Test-1.3.2.jar
+java -jar target/CS410-Exam-1.4.3.jar
 ```
 
 ---
