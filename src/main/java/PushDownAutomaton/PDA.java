@@ -38,6 +38,16 @@ import java.util.*;
  */
 public class PDA extends Automaton {
 
+    private static final String OUT_OF_MEMORY_TRACE =
+            "Execution aborted: PDA ran out of heap space.";
+    private static final ValidationMessage OUT_OF_MEMORY_MESSAGE =
+            new ValidationMessage("Execution aborted due to insufficient heap space.",
+                    0, ValidationMessageType.ERROR);
+    private static final List<ValidationMessage> OUT_OF_MEMORY_MESSAGES =
+            Collections.singletonList(OUT_OF_MEMORY_MESSAGE);
+    private static final ExecutionResult OUT_OF_MEMORY_RESULT =
+            new ExecutionResult(false, OUT_OF_MEMORY_MESSAGES, OUT_OF_MEMORY_TRACE);
+
     /* ---------------- Configuration knobs (system properties) ---------------- */
 
     /** Max number of configurations to explore before aborting (default 500k). */
@@ -141,6 +151,14 @@ public class PDA extends Automaton {
      */
     @Override
     public ExecutionResult execute(String inputText) {
+        try {
+            return executeSearch(inputText);
+        } catch (OutOfMemoryError e) {
+            return OUT_OF_MEMORY_RESULT;
+        }
+    }
+
+    protected ExecutionResult executeSearch(String inputText) {
         List<ValidationMessage> logs = new ArrayList<>();
 
         if (this.startState == null) {
