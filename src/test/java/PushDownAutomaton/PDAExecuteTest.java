@@ -24,6 +24,12 @@ import common.ValidationMessage;
  */
 @DisplayName("PDA Execute Method Tests")
 public class PDAExecuteTest {
+    private static final class OutOfMemoryPDA extends PDA {
+        @Override
+        protected ExecutionResult executeSearch(String inputText) {
+            throw new OutOfMemoryError("Java heap space");
+        }
+    }
 
     private PDA pda;
     private String validPDAContent;
@@ -200,6 +206,23 @@ public class PDAExecuteTest {
             
             assertNotNull(messages, "Runtime messages should not be null");
             // Messages may contain information about stack operations
+        }
+
+        @Test
+        @DisplayName("OutOfMemoryError should return rejected execution result")
+        void testOutOfMemoryErrorHandling() {
+            PDA outOfMemoryPDA = new OutOfMemoryPDA();
+
+            ExecutionResult result = outOfMemoryPDA.execute("ab");
+
+            assertNotNull(result, "OutOfMemoryError handling should return a result");
+            assertFalse(result.isAccepted(), "OutOfMemoryError should reject execution");
+            assertEquals("Execution aborted: PDA ran out of heap space.", result.getTrace());
+            assertEquals(1, result.getRuntimeMessages().size(), "Should contain a single runtime message");
+            assertEquals(ValidationMessage.ValidationMessageType.ERROR,
+                    result.getRuntimeMessages().get(0).getType());
+            assertEquals("Execution aborted due to insufficient heap space.",
+                    result.getRuntimeMessages().get(0).getMessage());
         }
     }
 
