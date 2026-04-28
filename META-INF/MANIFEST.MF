@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Implementation-Title: CS410-Exam
+Implementation-Version: 1.4.3
+Multi-Release: true
+Build-Jdk-Spec: 1.8
+Created-By: Maven Jar Plugin 3.2.0
+Main-Class: UserInterface.MainFrame
+
