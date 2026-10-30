@@ -194,21 +194,35 @@ public class TestRunner {
          *   - Example: 2/1024 → ~5.0 points, 1024/1024 → 10.0 points
          *
          * For cases with false positives (FP > 0):
-         *   Formula: min / log₁₀(FN + FP + 2)
+         *   Formula: min / log₁₀(FN + FP + 10)
          *   - Penalizes based on total errors (FN + FP)
          *   - Gives very low points (typically < 1.0 point)
          *   - Example: FP=127, FN=2492 → ~0.4 points
          *
+         * Trivial answers get 0 points:
+         *   - Rejects every string (TP = FP = 0)
+         *   - Accepts every string (TN = FN = 0), when the suite has strings to reject
+         *
          * The log₂ base is intuitive for CS students as it represents doublings (powers of 2).
          *
-         * @return calculated points with one decimal place (0.0 if no expected accepts)
+         * @return calculated points with one decimal place (0.0 if no expected accepts or a trivial answer)
          */
         public double calculatePoints() {
             // Total strings that should be accepted = TP + FN
             int totalRequired = truePositives + falseNegatives;
+            // Total strings that should be rejected = TN + FP
+            int totalRejected = trueNegatives + falsePositives;
 
             if (totalRequired == 0) {
                 return 0.0; // Cannot calculate without any expected accepts
+            }
+
+            if (truePositives == 0 && falsePositives == 0) {
+                return 0.0; // Rejects every string
+            }
+
+            if (totalRejected > 0 && trueNegatives == 0 && falseNegatives == 0) {
+                return 0.0; // Accepts every string
             }
 
             if (falsePositives == 0 && truePositives > 0) {
@@ -222,7 +236,7 @@ public class TestRunner {
                 return Math.round(points * 10.0) / 10.0;
             } else {
                 // Cases with false positives
-                // Formula: min / log10(FN + FP + 2)
+                // Formula: min / log10(FN + FP + 10)
                 double log10Errors = Math.log10(falseNegatives + falsePositives + 10);
                 double points = (double) minPoints / log10Errors;
 

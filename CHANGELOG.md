@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- **Grading**: A submission that rejects every test string, or accepts every test string when the suite has strings to reject, now gets 0 points instead of partial credit from the penalty formula
+
 ## [1.4.3] - 2026-04-08
 
 ### Fixed

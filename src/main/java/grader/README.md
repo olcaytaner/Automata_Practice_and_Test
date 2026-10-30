@@ -354,6 +354,10 @@ points = min / log₁₀(FN + FP + 10)
 **Example:**
 - FP=127, FN=2492 → ~0.4 points
 
+#### Trivial Answers
+
+A submission that rejects every test string (TP = FP = 0), or accepts every test string (TN = FN = 0) when the suite contains strings to reject, gets 0 points. Without this rule, the penalty formula above gives them partial credit, for example 2.0 points for rejecting all 90 strings that should be accepted.
+
 ### Why Logarithmic?
 
 The logarithmic formula provides several pedagogical benefits:
