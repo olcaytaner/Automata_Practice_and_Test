@@ -5,6 +5,9 @@
 ### Changed
 - **Grading**: A submission that rejects every test string, or accepts every test string when the suite has strings to reject, now gets 0 points instead of partial credit from the penalty formula
 
+### Fixed
+- **Grading**: A suite with a single string to accept no longer gives 0 points to a fully correct submission (the formula divided by log2(1) = 0). A submission with no false accepts that accepts every required string now gets the maximum directly
+
 ## [1.4.3] - 2026-04-08
 
 ### Fixed

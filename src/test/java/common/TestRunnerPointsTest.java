@@ -33,6 +33,16 @@ public class TestRunnerPointsTest {
     }
 
     @Test
+    void testSingleRequiredStringAllCorrectIsPerfect() {
+        assertEquals(10.0, result(1, 5, 0, 0).calculatePoints());
+    }
+
+    @Test
+    void testSingleRequiredStringRejectedGetsZero() {
+        assertEquals(0.0, result(0, 5, 0, 1).calculatePoints());
+    }
+
+    @Test
     void testNoStringsToAcceptGetsZero() {
         assertEquals(0.0, result(0, 5, 0, 0).calculatePoints());
     }

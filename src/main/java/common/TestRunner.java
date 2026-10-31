@@ -192,6 +192,7 @@ public class TestRunner {
          *   - Scales this ratio across point range from min to max
          *   - TP + FN = total strings that should be accepted
          *   - Example: 2/1024 → ~5.0 points, 1024/1024 → 10.0 points
+         *   - TP = TP + FN gives max directly, so a suite with one required string works
          *
          * For cases with false positives (FP > 0):
          *   Formula: min / log₁₀(FN + FP + 10)
@@ -226,6 +227,9 @@ public class TestRunner {
             }
 
             if (falsePositives == 0 && truePositives > 0) {
+                if (truePositives == totalRequired) {
+                    return maxPoints; // All correct; also avoids log2(1) = 0 in the divisor when TP + FN = 1
+                }
 
                 // Formula: (log2(TP) * (max - min)) / log2(TP + FN) + min
                 double log2TP = Math.log(truePositives) / Math.log(2);
