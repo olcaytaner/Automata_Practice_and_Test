@@ -7,6 +7,7 @@
 
 ### Fixed
 - **Grading**: A suite with a single string to accept no longer gives 0 points to a fully correct submission (the formula divided by log2(1) = 0). A submission with no false accepts that accepts every required string now gets the maximum directly
+- **Grading**: An automaton that fails validation partway through a test suite now always gets 0 points. Before, it was scored on the strings tested before the failure
 
 ## [1.4.3] - 2026-04-08
 

@@ -43,6 +43,13 @@ public class TestRunnerPointsTest {
     }
 
     @Test
+    void testInvalidAutomatonGetsZero() {
+        TestRunner.TestResult r = result(1, 0, 0, 0);
+        r.markInvalidAutomaton();
+        assertEquals(0.0, r.calculatePoints());
+    }
+
+    @Test
     void testNoStringsToAcceptGetsZero() {
         assertEquals(0.0, result(0, 5, 0, 0).calculatePoints());
     }

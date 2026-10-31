@@ -93,6 +93,7 @@ public class TestRunner {
         private int falsePositives;
         private int falseNegatives;
         private int timeoutCount;
+        private boolean invalidAutomaton;
         private int maxPoints;
         private int minPoints;
         private Integer maxRegexLength; // null means no limit
@@ -107,6 +108,7 @@ public class TestRunner {
             this.falsePositives = 0;
             this.falseNegatives = 0;
             this.timeoutCount = 0;
+            this.invalidAutomaton = false;
             this.maxPoints = 10;
             this.minPoints = 4;
             this.maxRegexLength = null;
@@ -120,6 +122,7 @@ public class TestRunner {
         public List<String> getFailures() { return failures; }
         public List<TestCaseResult> getDetailedResults() { return detailedResults; }
         public int getTimeoutCount() { return timeoutCount; }
+        public boolean isInvalidAutomaton() { return invalidAutomaton; }
 
         // Classification metrics getters
         public int getTruePositives() { return truePositives; }
@@ -155,6 +158,7 @@ public class TestRunner {
         public void incrementFalsePositives() { this.falsePositives++; }
         public void incrementFalseNegatives() { this.falseNegatives++; }
         public void incrementTimeoutCount() { this.timeoutCount++; }
+        public void markInvalidAutomaton() { this.invalidAutomaton = true; }
         
         // Score calculation methods
         public double getAccuracy() {
@@ -206,13 +210,19 @@ public class TestRunner {
          *
          * The log₂ base is intuitive for CS students as it represents doublings (powers of 2).
          *
-         * @return calculated points with one decimal place (0.0 if no expected accepts or a trivial answer)
+         * An automaton that fails validation during the run gets 0 points, whatever was counted before the failure.
+         *
+         * @return calculated points with one decimal place (0.0 if invalid, no expected accepts, or a trivial answer)
          */
         public double calculatePoints() {
             // Total strings that should be accepted = TP + FN
             int totalRequired = truePositives + falseNegatives;
             // Total strings that should be rejected = TN + FP
             int totalRejected = trueNegatives + falsePositives;
+
+            if (invalidAutomaton) {
+                return 0.0; // Validation failed during the run
+            }
 
             if (totalRequired == 0) {
                 return 0.0; // Cannot calculate without any expected accepts
@@ -514,6 +524,7 @@ public class TestRunner {
                         }
 
                         // Stop processing tests - invalid automaton gets no credit
+                        result.markInvalidAutomaton();
                         break;
                     }
 
