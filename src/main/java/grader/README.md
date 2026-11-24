@@ -71,6 +71,7 @@ inputString,expectedResult
 **Features:**
 - Supports optional `#min_points` and `#max_points` headers
 - Validates CSV format (input,expected)
+- Other `#` lines are comments, except lines shaped exactly like a test line (`#0011,1`, `#,1`): those are test strings that start with `#`
 - Expected result: `1` for accept, `0` for reject
 - Defaults: min_points=4, max_points=10
 
@@ -353,6 +354,12 @@ points = min / log₁₀(FN + FP + 10)
 
 **Example:**
 - FP=127, FN=2492 → ~0.4 points
+
+#### Trivial Answers
+
+A submission that rejects every test string (TP = FP = 0), or accepts every test string (TN = FN = 0) when the suite contains strings to reject, gets 0 points. Without this rule, the penalty formula above gives them partial credit, for example 2.0 points for rejecting all 90 strings that should be accepted.
+
+A submission without false accepts that accepts every required string gets the maximum. This also covers a suite with only one string to accept, where the logarithmic formula would divide by log₂(1) = 0.
 
 ### Why Logarithmic?
 

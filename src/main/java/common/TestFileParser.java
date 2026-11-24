@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Parser for CSV-format test files.
@@ -19,8 +20,16 @@ import java.util.List;
  * #max_regex_length=N (max regex length for REX)
  * #max_rules=N (max production rules for CFG)
  * #max_transitions=N (max transitions for PDA)
+ *
+ * Any other line starting with '#' is a comment, unless it has the exact shape of a
+ * test line ('#' followed by a string without commas or whitespace, then ",0" or ",1").
+ * Such lines are test strings whose first character is '#' (e.g. "#0011,1" tests the
+ * input "#0011" in a u#v language with an empty left side).
  */
 public class TestFileParser {
+
+    /** A '#'-prefixed line that is a test case rather than a comment, e.g. "#0011,1" or "#,1". */
+    private static final Pattern HASH_TEST_LINE = Pattern.compile("#[^,\\s]*,\\s*[01]");
 
     /**
      * Result of parsing a test file, including test cases and point configuration.
@@ -187,10 +196,11 @@ public class TestFileParser {
                                 String.format("Invalid max_transitions value at line %d: '%s'", lineNumber, line));
                         }
                         continue;
-                    } else {
+                    } else if (!HASH_TEST_LINE.matcher(line).matches()) {
                         // Other comments are ignored
                         continue;
                     }
+                    // Otherwise it is a test string starting with '#': parse it as a CSV line below
                 }
 
                 // Parse CSV line

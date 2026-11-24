@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- **Grading**: A submission that rejects every test string, or accepts every test string when the suite has strings to reject, now gets 0 points instead of partial credit from the penalty formula
+
+### Fixed
+- **Grading**: A suite with a single string to accept no longer gives 0 points to a fully correct submission (the formula divided by log2(1) = 0). A submission with no false accepts that accepts every required string now gets the maximum directly
+- **Grading**: An automaton that fails validation partway through a test suite now always gets 0 points. Before, it was scored on the strings tested before the failure
+- **Test files: strings starting with `#`**: lines like `#0011,1` or `#,1` were silently dropped as comments, so languages that use `#` as a symbol (e.g. `u#v` with an empty left side) lost those test cases. A `#` line that isn't a known header and has the exact test-line shape (`#` + string with no commas or spaces, then `,0`/`,1`) is now a test case. Other `#` lines are still comments
+
 ## [1.4.3] - 2026-04-08
 
 ### Fixed
