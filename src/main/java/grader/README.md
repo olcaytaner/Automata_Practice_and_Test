@@ -71,6 +71,7 @@ inputString,expectedResult
 **Features:**
 - Supports optional `#min_points` and `#max_points` headers
 - Validates CSV format (input,expected)
+- Other `#` lines are comments, except lines shaped exactly like a test line (`#0011,1`, `#,1`): those are test strings that start with `#`
 - Expected result: `1` for accept, `0` for reject
 - Defaults: min_points=4, max_points=10
 
